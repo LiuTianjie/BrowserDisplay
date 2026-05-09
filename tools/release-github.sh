@@ -56,6 +56,7 @@ export CREATE_APP_ZIP=${CREATE_APP_ZIP:-NO}
 export CREATE_DMG=${CREATE_DMG:-YES}
 export REQUIRE_SIGNING=${REQUIRE_SIGNING:-YES}
 export NOTARIZE=${NOTARIZE:-YES}
+export NOTARYTOOL_PROFILE=${NOTARYTOOL_PROFILE:-BrowserDisplayNotary}
 
 tools/package-macos.sh
 

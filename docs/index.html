@@ -22,6 +22,7 @@
 
     <div class="header-actions">
       <nav id="site-nav" class="site-nav" data-nav>
+        <a href="#download" data-i18n="nav.download">Download</a>
         <a href="#advantages" data-i18n="nav.advantages">Advantages</a>
         <a href="#how-it-works" data-i18n="nav.how">How it works</a>
         <a href="#usage" data-i18n="nav.usage">Usage</a>
@@ -60,8 +61,9 @@
           browser on the same local network.
         </p>
         <div class="hero-actions" aria-label="Primary actions" data-i18n-aria="hero.actionsAria">
-          <a class="button primary" href="#usage" data-i18n="hero.primaryCta">Get started</a>
-          <a class="button secondary" href="#how-it-works" data-i18n="hero.secondaryCta">See how it works</a>
+          <a class="button primary" href="https://github.com/LiuTianjie/BrowserDisplay/releases/latest" target="_blank"
+            rel="noreferrer" data-i18n="hero.primaryCta">Download for macOS</a>
+          <a class="button secondary" href="#usage" data-i18n="hero.secondaryCta">Setup guide</a>
         </div>
       </div>
 
@@ -96,12 +98,30 @@ status      ready</code></pre>
       </dl>
 
       <figure class="product-shot">
-        <img src="./assets/app-window.png?v=browserdisplay" width="1920" height="1515"
+        <img src="./assets/app-window-en.png?v=browserdisplay" width="1920" height="1515"
           alt="BrowserDisplay app screenshot showing capture sources, WebViewer, virtual display, and quality settings"
-          data-i18n-alt="hero.screenshotAlt" />
+          data-i18n-alt="hero.screenshotAlt" data-screenshot />
         <figcaption data-i18n="hero.caption">Capture sources, browser connections, virtual displays, and quality presets
           live in one Mac app.</figcaption>
       </figure>
+    </section>
+
+    <section id="download" class="section-block download-band" aria-label="Download BrowserDisplay"
+      data-i18n-aria="download.aria">
+      <div class="download-copy">
+        <p class="eyebrow">Download</p>
+        <h2 data-i18n="download.title">Get the latest macOS release</h2>
+        <p data-i18n="download.body">
+          Download the signed and notarized DMG from GitHub Releases, then drag BrowserDisplay to Applications.
+        </p>
+      </div>
+      <div class="download-card">
+        <span data-i18n="download.badge">Latest release</span>
+        <strong>BrowserDisplay for macOS</strong>
+        <p data-i18n="download.note">Requires macOS 14 or later. WebViewer runs in a browser on the same local network.</p>
+        <a class="button primary" href="https://github.com/LiuTianjie/BrowserDisplay/releases/latest" target="_blank"
+          rel="noreferrer" data-i18n="download.cta">Open GitHub Release</a>
+      </div>
     </section>
 
     <section class="quickstart" aria-label="Quick start" data-i18n-aria="quick.aria">

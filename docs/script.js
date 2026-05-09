@@ -5,6 +5,7 @@ const navLinks = Array.from(document.querySelectorAll(".site-nav a"));
 const languageToggle = document.querySelector("[data-lang-toggle]");
 const languageCurrent = document.querySelector("[data-lang-current]");
 const languageNext = document.querySelector("[data-lang-next]");
+const productScreenshot = document.querySelector("[data-screenshot]");
 
 const translations = {
   en: {
@@ -12,6 +13,7 @@ const translations = {
     "meta.description":
       "BrowserDisplay turns a browser device on your local network into a temporary display for your Mac, with screen, window, and virtual display capture over WebRTC.",
     "nav.homeAria": "BrowserDisplay home",
+    "nav.download": "Download",
     "nav.advantages": "Advantages",
     "nav.how": "How it works",
     "nav.usage": "Usage",
@@ -23,14 +25,20 @@ const translations = {
     "hero.lede":
       "Select a screen, window, or dedicated virtual display on your Mac. BrowserDisplay streams it over WebRTC to a browser on the same local network.",
     "hero.actionsAria": "Primary actions",
-    "hero.primaryCta": "Get started",
-    "hero.secondaryCta": "See how it works",
+    "hero.primaryCta": "Download for macOS",
+    "hero.secondaryCta": "Setup guide",
     "hero.statusAria": "BrowserDisplay status example",
     "stats.aria": "Core capabilities",
     "stats.sourceLabel": "Source",
     "hero.screenshotAlt":
       "BrowserDisplay app screenshot showing capture sources, WebViewer, virtual display, and quality settings",
     "hero.caption": "Capture sources, browser connections, virtual displays, and quality presets live in one Mac app.",
+    "download.aria": "Download BrowserDisplay",
+    "download.title": "Get the latest macOS release",
+    "download.body": "Download the signed and notarized DMG from GitHub Releases, then drag BrowserDisplay to Applications.",
+    "download.badge": "Latest release",
+    "download.note": "Requires macOS 14 or later. WebViewer runs in a browser on the same local network.",
+    "download.cta": "Open GitHub Release",
     "quick.aria": "Quick start",
     "quick.title": "Connect in three steps",
     "quick.step1Title": "Choose a source",
@@ -72,6 +80,7 @@ const translations = {
     "meta.description":
       "BrowserDisplay 把同一局域网里的浏览器设备变成 Mac 的临时显示器，支持屏幕、窗口和虚拟屏捕获，并通过 WebRTC 传输。",
     "nav.homeAria": "BrowserDisplay 首页",
+    "nav.download": "下载",
     "nav.advantages": "优势",
     "nav.how": "原理",
     "nav.usage": "使用方法",
@@ -82,13 +91,19 @@ const translations = {
     "hero.title": "把浏览器变成 Mac 显示器",
     "hero.lede": "在 Mac 上选择屏幕、窗口或专用虚拟屏，BrowserDisplay 通过 WebRTC 把画面送到同一局域网里的浏览器。",
     "hero.actionsAria": "主要操作",
-    "hero.primaryCta": "开始使用",
-    "hero.secondaryCta": "查看原理",
+    "hero.primaryCta": "下载 macOS 版",
+    "hero.secondaryCta": "安装说明",
     "hero.statusAria": "BrowserDisplay 状态示例",
     "stats.aria": "核心能力",
     "stats.sourceLabel": "来源",
     "hero.screenshotAlt": "BrowserDisplay 应用界面截图，展示捕获源、WebViewer、虚拟屏和画质设置",
     "hero.caption": "所有捕获源、浏览器连接、虚拟屏和画质都在一个 Mac 应用里完成。",
+    "download.aria": "下载 BrowserDisplay",
+    "download.title": "获取最新版 macOS 安装包",
+    "download.body": "从 GitHub Releases 下载已签名并公证的 DMG，然后把 BrowserDisplay 拖到 Applications。",
+    "download.badge": "最新版本",
+    "download.note": "需要 macOS 14 或更新版本。WebViewer 在同一局域网里的浏览器中运行。",
+    "download.cta": "打开 GitHub Release",
     "quick.aria": "快速开始",
     "quick.title": "三步连接",
     "quick.step1Title": "选来源",
@@ -161,6 +176,13 @@ const applyLanguage = (language) => {
     languageNext.textContent = currentLanguage === "zh" ? "EN" : "中文";
   }
 
+  if (productScreenshot) {
+    productScreenshot.src =
+      currentLanguage === "zh"
+        ? "./assets/app-window.png?v=browserdisplay"
+        : "./assets/app-window-en.png?v=browserdisplay";
+  }
+
   window.localStorage?.setItem("browserdisplay.docs.language", currentLanguage);
 };
 
@@ -208,7 +230,7 @@ sections.forEach((section) => observer.observe(section));
 
 const revealItems = Array.from(
   document.querySelectorAll(
-    ".quickstart-lead, .step-grid li, .section-heading, .feature-card, .flow-grid article, .command-card, .quality-row, .virtual-band"
+    ".download-band, .download-card, .quickstart-lead, .step-grid li, .section-heading, .feature-card, .flow-grid article, .command-card, .quality-row, .virtual-band"
   )
 );
 

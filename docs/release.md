@@ -30,11 +30,7 @@ xcrun notarytool store-credentials BrowserDisplayNotary \
   --password "xxxx-xxxx-xxxx-xxxx"
 ```
 
-Then use:
-
-```bash
-export NOTARYTOOL_PROFILE=BrowserDisplayNotary
-```
+The release script uses this `BrowserDisplayNotary` profile by default.
 
 ## Unsigned local package
 
@@ -50,7 +46,6 @@ This creates `dist/BrowserDisplay-macOS.dmg`, `dist/BrowserDisplay-macOS.zip`, a
 export REQUIRE_SIGNING=YES
 export NOTARIZE=YES
 export CREATE_APP_ZIP=NO
-export NOTARYTOOL_PROFILE=BrowserDisplayNotary
 tools/package-macos.sh
 ```
 
@@ -66,6 +61,6 @@ export SIGNING_IDENTITY="Developer ID Application: Your Name (ABCDE12345)"
 tools/release-github.sh v1.0.0
 ```
 
-The release script requires a clean working tree by default, creates the tag if needed, pushes it to `origin`, builds a signed and notarized DMG, and uploads the DMG, dSYM zip, and checksums to the GitHub Release.
+The release script requires a clean working tree by default, creates the tag if needed, pushes it to `origin`, builds a signed and notarized DMG using the `BrowserDisplayNotary` keychain profile by default, and uploads the DMG, dSYM zip, and checksums to the GitHub Release.
 
 For a one-off local test against uncommitted code, use `ALLOW_DIRTY=YES`, but do not use that for real releases.
