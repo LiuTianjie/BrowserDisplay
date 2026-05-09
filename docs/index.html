@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MirrorDisplay | 把 iPhone 变成 Mac 扩展显示器</title>
+    <meta
+      name="description"
+      content="MirrorDisplay 是一套面向 macOS 与 iPhone 的局域网低延迟显示方案，支持捕获屏幕或窗口，并通过 WebViewer 与虚拟扩展屏实验模式把 iPhone 变成专用显示器。"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header" data-header>
+      <a class="brand" href="#top" aria-label="MirrorDisplay 首页">
+        <span class="brand-mark" aria-hidden="true">镜</span>
+        <span>
+          <strong>MirrorDisplay</strong>
+          <small>局域网显示器</small>
+        </span>
+      </a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav id="site-nav" class="site-nav" data-nav>
+        <a href="#advantages">优势</a>
+        <a href="#how-it-works">原理</a>
+        <a href="#usage">使用方法</a>
+        <a href="#virtual-display">虚拟屏</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero section-panel">
+        <div class="hero-copy">
+          <p class="eyebrow">macOS + iPhone · 局域网显示方案</p>
+          <h1>把 iPhone 变成低延迟显示器</h1>
+          <p class="hero-lede">
+            Mac 端捕获屏幕或窗口，通过 WebRTC 推送到 iPhone。需要更干净的工作区时，一键切到专用虚拟屏。
+          </p>
+          <div class="hero-actions" aria-label="主要操作">
+            <a class="button primary" href="#usage">开始使用</a>
+            <a class="button secondary" href="#advantages">了解优势</a>
+          </div>
+          <dl class="hero-stats" aria-label="核心能力">
+            <div>
+              <dt>最高</dt>
+              <dd>1440p60</dd>
+            </div>
+            <div>
+              <dt>连接</dt>
+              <dd>WebRTC</dd>
+            </div>
+            <div>
+              <dt>访问</dt>
+              <dd>Safari / WebViewer</dd>
+            </div>
+          </dl>
+        </div>
+
+        <figure class="hero-visual">
+          <img src="./assets/app-window.png" width="1668" height="1277" alt="MirrorDisplay Mac Host 应用界面截图，包含捕获源、扩展屏实验模式、WebViewer 和画质面板" />
+          <figcaption>Mac Host 集中管理捕获源、虚拟扩展屏、WebViewer 连接和画质预设。</figcaption>
+        </figure>
+      </section>
+
+      <section class="quickstart" aria-label="快速开始">
+        <div class="quickstart-copy">
+          <p class="eyebrow">Quick start</p>
+          <h2>三步连接</h2>
+        </div>
+        <ol class="step-strip">
+          <li>
+            <strong>选来源</strong>
+            <span>屏幕、窗口，或专用虚拟屏。</span>
+          </li>
+          <li>
+            <strong>扫码打开</strong>
+            <span>iPhone Safari 访问 WebViewer。</span>
+          </li>
+          <li>
+            <strong>开始传输</strong>
+            <span>按网络状态选择画质。</span>
+          </li>
+        </ol>
+      </section>
+
+      <section id="advantages" class="doc-section">
+        <div class="section-heading">
+          <p class="eyebrow">Why MirrorDisplay</p>
+          <h2>核心优势</h2>
+          <p>把复杂链路收进一个 Mac Host：捕获、连接、画质和虚拟屏都在同一处完成。</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-index">01</span>
+            <h3>随身副屏</h3>
+            <p>把聊天、日志、演示备注放到 iPhone。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">02</span>
+            <h3>专用工作区</h3>
+            <p>虚拟屏只展示你拖进去的内容。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">03</span>
+            <h3>无需安装</h3>
+            <p>Safari 打开 WebViewer，扫码即连。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">04</span>
+            <h3>低延迟链路</h3>
+            <p>ScreenCaptureKit 捕获，WebRTC 推流。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">05</span>
+            <h3>画质可控</h3>
+            <p>从稳定到高清，按网络一键切换。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-index">06</span>
+            <h3>可扩展控制</h3>
+            <p>为触控板、键盘和授权控制预留链路。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="how-it-works" class="doc-section split-section">
+        <div class="section-heading sticky-heading">
+          <p class="eyebrow">Architecture</p>
+          <h2>它如何工作</h2>
+          <p>一条很短的本地链路，所有状态都可见。</p>
+        </div>
+
+        <div class="architecture-list">
+          <article class="arch-item">
+            <span>Mac Host</span>
+            <h3>选择来源</h3>
+            <p>屏幕、窗口、虚拟屏统一管理。</p>
+          </article>
+          <article class="arch-item">
+            <span>Capture + Encoder</span>
+            <h3>捕获并编码</h3>
+            <p>按当前画质预设输出视频流。</p>
+          </article>
+          <article class="arch-item">
+            <span>WebViewer</span>
+            <h3>Safari 接收</h3>
+            <p>扫码打开，连接状态实时显示。</p>
+          </article>
+          <article class="arch-item">
+            <span>Virtual Display</span>
+            <h3>专用扩展屏</h3>
+            <p>通过 BetterDisplay 创建独立画面目标。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="usage" class="doc-section">
+        <div class="section-heading">
+          <p class="eyebrow">Guide</p>
+          <h2>使用方法</h2>
+          <p>先跑通普通捕获，再按需要启用虚拟屏。</p>
+        </div>
+
+        <div class="usage-grid">
+          <article class="use-card">
+            <span>01</span>
+            <h3>授权</h3>
+            <p>允许 macOS 屏幕录制。</p>
+          </article>
+          <article class="use-card">
+            <span>02</span>
+            <h3>选择</h3>
+            <p>选择屏幕、窗口或虚拟屏。</p>
+          </article>
+          <article class="use-card">
+            <span>03</span>
+            <h3>扫码</h3>
+            <p>iPhone Safari 打开 WebViewer。</p>
+          </article>
+          <article class="use-card">
+            <span>04</span>
+            <h3>推流</h3>
+            <p>点击开始传输。</p>
+          </article>
+        </div>
+
+        <div class="quality-pills" aria-label="画质预设">
+          <span>720p30 · 稳定</span>
+          <span>1080p60 · 推荐</span>
+          <span>1440p60 · 高清</span>
+        </div>
+
+        <div class="faq-row">
+          <details>
+            <summary>连接失败</summary>
+            <p>确认 Mac 与 iPhone 在同一网络，并优先使用 Mac Host 显示的 IP 地址。</p>
+          </details>
+          <details>
+            <summary>找不到捕获源</summary>
+            <p>重新授予屏幕录制权限后，退出并重新打开 Mac Host。</p>
+          </details>
+          <details>
+            <summary>画面卡顿</summary>
+            <p>切到 1080p30 或 720p30，优先使用 5GHz / 6GHz Wi-Fi。</p>
+          </details>
+        </div>
+      </section>
+
+      <section id="virtual-display" class="doc-section dark-band">
+        <div class="section-heading">
+          <p class="eyebrow">Experimental mode</p>
+          <h2>虚拟扩展屏实验模式</h2>
+          <p>不捕获主屏。创建一块专用显示器，再发送到 iPhone。</p>
+        </div>
+
+        <div class="virtual-grid">
+          <article>
+            <h3>什么时候使用</h3>
+            <p>演示、直播、调试、会议共享。</p>
+          </article>
+          <article>
+            <h3>外部依赖</h3>
+            <p>由 BetterDisplay 提供虚拟显示能力。</p>
+          </article>
+          <article>
+            <h3>安全边界</h3>
+            <p>只清理 MirrorDisplay 自己创建的屏幕。</p>
+          </article>
+        </div>
+
+        <div class="command-card">
+          <div>
+            <p class="eyebrow">BetterDisplay CLI 示例</p>
+            <h3>创建一块 16:9 HiDPI 虚拟屏</h3>
+          </div>
+          <button class="copy-button" type="button" data-copy-target="betterdisplay-command">复制</button>
+          <pre><code id="betterdisplay-command">/Applications/BetterDisplay.app/Contents/MacOS/BetterDisplay create \
+  -type=VirtualScreen \
+  -virtualScreenName=MirrorDisplay-AB12 \
+  -aspectWidth=16 \
+  -aspectHeight=9 \
+  -virtualScreenHiDPI=on \
+  -resolutionList=1920x1080,2560x1440</code></pre>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>MirrorDisplay</strong>
+        <p>为本地显示、演示和移动办公准备的一条轻量链路。</p>
+      </div>
+      <a href="#usage">开始使用</a>
+    </footer>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
