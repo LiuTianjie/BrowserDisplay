@@ -1,6 +1,6 @@
 #!/bin/zsh
 set -euo pipefail
 
-tccutil reset ScreenCapture com.turning4th.mirrordisplay.machost
+tccutil reset ScreenCapture com.turning4th.browserdisplay.app
 
-echo "已重置镜像显示的屏幕录制权限。请重新运行 tools/run-mac-host.command，然后在系统设置中允许屏幕录制。"
+echo "已重置 BrowserDisplay 的屏幕录制权限。请重新运行 tools/run-browserdisplay.command，然后在系统设置中允许屏幕录制。"

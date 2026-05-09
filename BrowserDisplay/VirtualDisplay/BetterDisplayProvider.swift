@@ -24,7 +24,7 @@ final class BetterDisplayProvider: VirtualDisplayProvider {
                 providerName: name,
                 executableURL: nil,
                 appURL: nil,
-                message: "需要 BetterDisplay 创建 macOS 虚拟显示器。MirrorDisplay 会捕获这块专用屏幕并发送到 WebViewer。"
+                message: "需要 BetterDisplay 创建 macOS 虚拟显示器。BrowserDisplay 会捕获这块专用屏幕并发送到 WebViewer。"
             )
         }
 
@@ -82,7 +82,7 @@ final class BetterDisplayProvider: VirtualDisplayProvider {
     }
 
     func removeDisplay(record: VirtualDisplayRecord) async throws {
-        guard record.isMirrorDisplayOwned else {
+        guard record.isBrowserDisplayOwned else {
             throw VirtualDisplayError.unsafeRecord
         }
 

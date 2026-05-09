@@ -32,7 +32,7 @@ struct VirtualDisplayRequest: Equatable {
             .uppercased()
 
         return VirtualDisplayRequest(
-            displayName: "MirrorDisplay-\(suffix)",
+            displayName: "BrowserDisplay-\(suffix)",
             aspectWidth: 16,
             aspectHeight: 9,
             isHiDPIEnabled: true,
@@ -65,8 +65,8 @@ struct VirtualDisplayRecord: Codable, Equatable, Identifiable {
         self.cleanupStatus = cleanupStatus
     }
 
-    var isMirrorDisplayOwned: Bool {
-        provider == BetterDisplayProvider.providerName && displayName.hasPrefix("MirrorDisplay-")
+    var isBrowserDisplayOwned: Bool {
+        provider == BetterDisplayProvider.providerName && displayName.hasPrefix("BrowserDisplay-")
     }
 }
 
@@ -126,7 +126,7 @@ enum VirtualDisplayError: LocalizedError {
         case .createdDisplayNotFound:
             return "虚拟屏已创建，但 10 秒内没有出现在可捕获显示器列表中。请刷新捕获源后手动选择新增显示器。"
         case .unsafeRecord:
-            return "这块虚拟屏不是 MirrorDisplay 本次记录创建的屏幕，已跳过清理。"
+            return "这块虚拟屏不是 BrowserDisplay 本次记录创建的屏幕，已跳过清理。"
         }
     }
 }

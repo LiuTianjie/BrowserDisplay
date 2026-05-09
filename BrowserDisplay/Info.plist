@@ -11,9 +11,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleDisplayName</key>
-	<string>镜像显示</string>
+	<string>BrowserDisplay</string>
 	<key>CFBundleName</key>
-	<string>镜像显示</string>
+	<string>BrowserDisplay</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
@@ -28,7 +28,7 @@
 		<string>_mirror-display-video._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>镜像显示需要使用局域网连接这台 Mac 和浏览器设备。</string>
+	<string>BrowserDisplay 需要使用局域网连接这台 Mac 和浏览器设备。</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

@@ -47,7 +47,7 @@ final class HostViewModel: ObservableObject {
         selectedSourceScope = .currentDesktop
         permissionDiagnostics = ScreenRecordingPermission.diagnostics
         startNetworking()
-        shouldCleanupVirtualDisplayOnExit = preferences.bool(forKey: "MirrorDisplay.VirtualDisplay.cleanupOnExit")
+        shouldCleanupVirtualDisplayOnExit = preferences.bool(forKey: "BrowserDisplay.VirtualDisplay.cleanupOnExit")
         await refreshVirtualDisplayAvailability()
         restoreLastVirtualDisplayRecord()
         await refreshCaptureSources()
@@ -124,7 +124,7 @@ final class HostViewModel: ObservableObject {
 
         if let record = currentVirtualDisplayRecord, record.cleanupStatus != .removed {
             virtualDisplayState = record.cleanupStatus == .cleanupFailed ? .cleanupFailed : .ready
-            virtualDisplayStatus = "虚拟屏已就绪。把窗口拖到 MirrorDisplay 屏幕，或移除这块虚拟屏。"
+            virtualDisplayStatus = "虚拟屏已就绪。把窗口拖到 BrowserDisplay 屏幕，或移除这块虚拟屏。"
             return
         }
 
@@ -144,7 +144,7 @@ final class HostViewModel: ObservableObject {
         }
 
         virtualDisplayState = .creating
-        virtualDisplayStatus = "正在通过 BetterDisplay 创建 MirrorDisplay 虚拟屏"
+        virtualDisplayStatus = "正在通过 BetterDisplay 创建 BrowserDisplay 虚拟屏"
         virtualDisplayErrorMessage = nil
 
         do {
@@ -170,7 +170,7 @@ final class HostViewModel: ObservableObject {
             }
 
             virtualDisplayState = .ready
-            virtualDisplayStatus = "虚拟屏已就绪。把窗口拖到 MirrorDisplay 屏幕，正在开始传输。"
+            virtualDisplayStatus = "虚拟屏已就绪。把窗口拖到 BrowserDisplay 屏幕，正在开始传输。"
             await startStreaming()
         } catch {
             virtualDisplayState = .createFailed
@@ -185,7 +185,7 @@ final class HostViewModel: ObservableObject {
             return
         }
 
-        guard record.isMirrorDisplayOwned else {
+        guard record.isBrowserDisplayOwned else {
             virtualDisplayState = .cleanupFailed
             virtualDisplayErrorMessage = VirtualDisplayError.unsafeRecord.localizedDescription
             virtualDisplayStatus = VirtualDisplayError.unsafeRecord.localizedDescription
@@ -193,7 +193,7 @@ final class HostViewModel: ObservableObject {
         }
 
         virtualDisplayState = .removing
-        virtualDisplayStatus = "正在移除 MirrorDisplay 创建的虚拟屏"
+        virtualDisplayStatus = "正在移除 BrowserDisplay 创建的虚拟屏"
         virtualDisplayErrorMessage = nil
 
         if isStreaming {
@@ -223,7 +223,7 @@ final class HostViewModel: ObservableObject {
             return
         }
 
-        guard let record = currentVirtualDisplayRecord, record.isMirrorDisplayOwned, record.cleanupStatus != .removed else {
+        guard let record = currentVirtualDisplayRecord, record.isBrowserDisplayOwned, record.cleanupStatus != .removed else {
             return
         }
 
@@ -247,7 +247,7 @@ final class HostViewModel: ObservableObject {
 
     func setCleanupVirtualDisplayOnExit(_ enabled: Bool) {
         shouldCleanupVirtualDisplayOnExit = enabled
-        preferences.set(enabled, forKey: "MirrorDisplay.VirtualDisplay.cleanupOnExit")
+        preferences.set(enabled, forKey: "BrowserDisplay.VirtualDisplay.cleanupOnExit")
     }
 
     func toggleStreaming() async {
@@ -490,7 +490,7 @@ final class HostViewModel: ObservableObject {
             return
         }
 
-        if let record = virtualDisplayStore.activeMirrorDisplayRecords().sorted(by: { $0.createdAt > $1.createdAt }).first {
+        if let record = virtualDisplayStore.activeBrowserDisplayRecords().sorted(by: { $0.createdAt > $1.createdAt }).first {
             currentVirtualDisplayRecord = record
             virtualDisplayState = record.cleanupStatus == .cleanupFailed ? .cleanupFailed : .ready
             virtualDisplayStatus = "检测到上次遗留的 \(record.displayName)，可点击移除虚拟屏清理。"
@@ -534,7 +534,7 @@ final class HostViewModel: ObservableObject {
            let selectedSourceID,
            let selectedSource = captureSources.first(where: { $0.id == selectedSourceID }),
            selectedSource.displayID == record.displayID || selectedSource.name == record.displayName {
-            return "MirrorDisplay 虚拟屏"
+            return "BrowserDisplay 虚拟屏"
         }
 
         if let selectedSourceID,
@@ -546,7 +546,7 @@ final class HostViewModel: ObservableObject {
     }
 
     private func currentStreamSourceKind() -> String {
-        if currentStreamSourceName() == "MirrorDisplay 虚拟屏" {
+        if currentStreamSourceName() == "BrowserDisplay 虚拟屏" {
             return "virtual-display"
         }
 

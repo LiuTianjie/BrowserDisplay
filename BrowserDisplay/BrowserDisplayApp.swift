@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 @main
-struct MacHostApp: App {
+struct BrowserDisplayApp: App {
     @StateObject private var viewModel = HostViewModel()
 
     var body: some Scene {

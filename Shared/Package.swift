@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "MirrorDisplay",
+    name: "BrowserDisplay",
     platforms: [
         .macOS(.v14)
     ],

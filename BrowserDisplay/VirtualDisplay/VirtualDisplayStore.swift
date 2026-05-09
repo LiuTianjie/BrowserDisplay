@@ -1,7 +1,7 @@
 import Foundation
 
 final class VirtualDisplayStore {
-    private let key = "MirrorDisplay.VirtualDisplay.records"
+    private let key = "BrowserDisplay.VirtualDisplay.records"
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -20,8 +20,8 @@ final class VirtualDisplayStore {
         }
     }
 
-    func activeMirrorDisplayRecords() -> [VirtualDisplayRecord] {
-        loadRecords().filter { $0.isMirrorDisplayOwned && $0.cleanupStatus != .removed }
+    func activeBrowserDisplayRecords() -> [VirtualDisplayRecord] {
+        loadRecords().filter { $0.isBrowserDisplayOwned && $0.cleanupStatus != .removed }
     }
 
     func save(_ record: VirtualDisplayRecord) {

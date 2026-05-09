@@ -1,3 +1,12 @@
 DerivedData/
-.DS_Store
 Shared/.build/
+.build/
+
+.DS_Store
+
+.claude/
+
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+Shared/.swiftpm/xcode/xcuserdata/

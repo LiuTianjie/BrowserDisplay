@@ -678,7 +678,7 @@ private enum WebViewerAssets {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
       <meta name="theme-color" content="#000000">
-      <title>Mirror WebViewer</title>
+      <title>BrowserDisplay WebViewer</title>
       <link rel="stylesheet" href="/viewer.css?v=12">
     </head>
     <body>
@@ -1194,7 +1194,7 @@ private enum WebViewerAssets {
       let disconnectTimer = { value: null };
       let firstFrameTimer = { value: null };
       let lastRenderedFrameAt = { value: Date.now() };
-      const pairingStorageKey = `MirrorDisplay.pairingCode.${location.host}`;
+      const pairingStorageKey = `BrowserDisplay.pairingCode.${location.host}`;
 
       const setStatus = (text, state = "idle") => {
         status.textContent = text;

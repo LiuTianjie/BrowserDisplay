@@ -11,7 +11,7 @@ struct CaptureSource: Identifiable, Equatable {
     var thumbnail: NSImage?
     var displayID: CGDirectDisplayID?
     var displayNameHint: String?
-    var isVirtualMirrorDisplay: Bool = false
+    var isVirtualBrowserDisplay: Bool = false
 
     static func == (lhs: CaptureSource, rhs: CaptureSource) -> Bool {
         lhs.id == rhs.id && lhs.name == rhs.name && lhs.kind == rhs.kind
@@ -50,7 +50,7 @@ final class ScreenCaptureManager: NSObject, SCStreamOutput {
                 thumbnail: includeThumbnails ? makeDisplayThumbnail(display.displayID) : nil,
                 displayID: display.displayID,
                 displayNameHint: displayName,
-                isVirtualMirrorDisplay: displayName.hasPrefix("MirrorDisplay-")
+                isVirtualBrowserDisplay: displayName.hasPrefix("BrowserDisplay-")
             )
         }
         let windows = uniqueWindows(from: content.windows
@@ -66,7 +66,7 @@ final class ScreenCaptureManager: NSObject, SCStreamOutput {
                 thumbnail: includeThumbnails ? makeWindowThumbnail(window.windowID) : nil,
                 displayID: nil,
                 displayNameHint: nil,
-                isVirtualMirrorDisplay: false
+                isVirtualBrowserDisplay: false
             )
         }
 

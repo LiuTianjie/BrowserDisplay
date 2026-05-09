@@ -40,7 +40,7 @@ struct ContentView: View {
                     .frame(width: 54, height: 54)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("镜像显示")
+                    Text("BrowserDisplay")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                     Text("把浏览器设备变成低延迟显示器，支持虚拟屏")
                         .font(.callout)
