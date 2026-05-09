@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* BrowserDisplayApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* BrowserDisplayApp.swift */; };
+		A10000000000000000000004 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* AppLanguage.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* HostViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* HostViewModel.swift */; };
 		A10000000000000000000020 /* Networking/WebViewerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000020 /* Networking/WebViewerService.swift */; };
@@ -25,6 +26,7 @@
 
 /* Begin PBXFileReference section */
 		A20000000000000000000001 /* BrowserDisplayApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserDisplayApp.swift; sourceTree = "<group>"; };
+		A20000000000000000000004 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* HostViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostViewModel.swift; sourceTree = "<group>"; };
 		A20000000000000000000020 /* Networking/WebViewerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Networking/WebViewerService.swift; sourceTree = "<group>"; };
@@ -66,6 +68,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000001 /* BrowserDisplayApp.swift */,
+				A20000000000000000000004 /* AppLanguage.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000003 /* HostViewModel.swift */,
 				A20000000000000000000020 /* Networking/WebViewerService.swift */,
@@ -168,6 +171,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000001 /* BrowserDisplayApp.swift in Sources */,
+				A10000000000000000000004 /* AppLanguage.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* HostViewModel.swift in Sources */,
 				A10000000000000000000020 /* Networking/WebViewerService.swift in Sources */,

@@ -1,4 +1,5 @@
 DerivedData/
+dist/
 Shared/.build/
 .build/
 

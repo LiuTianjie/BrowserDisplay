@@ -2,12 +2,22 @@ import CoreImage.CIFilterBuiltins
 import SwiftUI
 import MirrorProtocol
 
+enum BrowserDisplayLayout {
+    static let minimumWindowWidth: CGFloat = 1180
+    static let minimumWindowHeight: CGFloat = 980
+    static let controlPanelWidth: CGFloat = 320
+}
+
 struct ContentView: View {
     @ObservedObject var viewModel: HostViewModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var selectedConfig: StreamConfig {
         StreamConfig.presets.first(where: { $0.id == viewModel.selectedConfigID }) ?? StreamConfig.presets[0]
+    }
+
+    private var s: AppStrings {
+        viewModel.strings
     }
 
     var body: some View {
@@ -42,13 +52,23 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("BrowserDisplay")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
-                    Text("把浏览器设备变成低延迟显示器，支持虚拟屏")
+                    Text(s.subtitle)
                         .font(.callout)
                         .foregroundStyle(.white.opacity(0.68))
                 }
             }
 
             Spacer()
+
+            Button {
+                viewModel.toggleLanguage()
+            } label: {
+                Text(viewModel.language.switchTitle)
+                    .font(.caption.weight(.bold))
+                    .frame(minWidth: 44)
+            }
+            .buttonStyle(.bordered)
+            .accessibilityLabel(viewModel.language.switchAccessibilityLabel)
 
             StatusPill(text: viewModel.connectionStatus, color: viewModel.isStreaming ? .green : .blue)
         }
@@ -62,16 +82,16 @@ struct ContentView: View {
         GlassPanel {
             VStack(alignment: .leading, spacing: 18) {
                 HStack {
-                    Label("捕获源", systemImage: "rectangle.on.rectangle")
+                    Label(s.captureSources, systemImage: "rectangle.on.rectangle")
                         .font(.title3.bold())
-                    CountBadge(count: viewModel.captureSources.count)
+                    CountBadge(count: viewModel.captureSources.count, labelPrefix: s.sourceCount)
                     Spacer()
                     if viewModel.hasScreenRecordingAccess {
                         if viewModel.isStreaming {
-                            LockedPill()
+                            LockedPill(text: s.lockedWhileStreaming)
                         }
 
-                        ScopeSegmentedControl(selection: $viewModel.selectedSourceScope)
+                        ScopeSegmentedControl(selection: $viewModel.selectedSourceScope, strings: s)
                             .onChange(of: viewModel.selectedSourceScope) { _, _ in
                                 Task<Void, Never> { await viewModel.refreshCaptureSources() }
                             }
@@ -81,7 +101,7 @@ struct ContentView: View {
                         Button {
                             Task<Void, Never> { await viewModel.refreshCaptureSources() }
                         } label: {
-                            Label("刷新", systemImage: "arrow.clockwise")
+                            Label(s.refresh, systemImage: "arrow.clockwise")
                         }
                         .buttonStyle(.bordered)
                         .disabled(viewModel.isStreaming)
@@ -89,21 +109,22 @@ struct ContentView: View {
                         Button {
                             Task<Void, Never> { await viewModel.requestScreenRecordingAccess() }
                         } label: {
-                            Label("授权访问", systemImage: "lock.open")
+                            Label(s.authorizeAccess, systemImage: "lock.open")
                         }
                         .buttonStyle(.borderedProminent)
                     }
                 }
 
                 if viewModel.captureSources.isEmpty {
-                    EmptySourceView(message: viewModel.screenRecordingStatus)
+                    EmptySourceView(message: viewModel.screenRecordingStatus, strings: s)
                 } else {
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 240, maximum: 280), spacing: 16, alignment: .top)], alignment: .leading, spacing: 16) {
                             ForEach(viewModel.captureSources) { source in
                                 CaptureSourceCard(
                                     source: source,
-                                    isSelected: source.id == viewModel.selectedSourceID
+                                    isSelected: source.id == viewModel.selectedSourceID,
+                                    strings: s
                                 ) {
                                     withAnimation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.86)) {
                                         viewModel.selectCaptureSource(source.id)
@@ -123,161 +144,160 @@ struct ContentView: View {
     }
 
     private var controlPanel: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                GlassPanel {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Label("会话", systemImage: "dot.radiowaves.left.and.right")
-                            .font(.title3.bold())
+        VStack(spacing: 16) {
+            GlassPanel {
+                VStack(alignment: .leading, spacing: 16) {
+                    Label(s.session, systemImage: "dot.radiowaves.left.and.right")
+                        .font(.title3.bold())
 
-                        InfoRow(title: "主机", value: viewModel.hostName)
-                        InfoRow(title: "WebViewer", value: "HTTP \(MirrorDiscovery.defaultWebViewerPort)")
-                        InfoRow(title: "权限", value: viewModel.screenRecordingStatus)
-                    }
+                    InfoRow(title: s.host, value: viewModel.hostName)
+                    InfoRow(title: "WebViewer", value: "HTTP \(MirrorDiscovery.defaultWebViewerPort)")
+                    InfoRow(title: s.permission, value: viewModel.screenRecordingStatus)
                 }
+            }
 
-                virtualDisplayPanel
+            virtualDisplayPanel
 
-                GlassPanel {
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack {
-                            Label("WebViewer", systemImage: "display")
-                                .font(.title3.bold())
-                            Spacer()
-                            StatusPill(text: viewModel.webViewerStatus, color: viewModel.connectedWebViewers > 0 ? .green : .blue)
-                        }
+            GlassPanel {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Label("WebViewer", systemImage: "display")
+                            .font(.title3.bold())
+                        Spacer()
+                        StatusPill(text: viewModel.webViewerStatus, color: viewModel.connectedWebViewers > 0 ? .green : .blue)
+                    }
 
-                        HStack(alignment: .center, spacing: 14) {
-                            QRCodeView(value: viewModel.webViewerURL)
-                                .frame(width: 106, height: 106)
+                    HStack(alignment: .center, spacing: 14) {
+                        QRCodeView(value: viewModel.webViewerURL)
+                            .frame(width: 106, height: 106)
 
-                            VStack(alignment: .leading, spacing: 10) {
-                                Text(viewModel.webViewerURL.isEmpty ? "正在生成地址" : viewModel.webViewerURL)
-                                    .font(.caption.monospaced())
-                                    .foregroundStyle(.white.opacity(0.78))
-                                    .lineLimit(3)
-                                    .textSelection(.enabled)
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(viewModel.webViewerURL.isEmpty ? s.generatingAddress : viewModel.webViewerURL)
+                                .font(.caption.monospaced())
+                                .foregroundStyle(.white.opacity(0.78))
+                                .lineLimit(3)
+                                .textSelection(.enabled)
 
-                                HStack(spacing: 8) {
-                                    Button {
-                                        viewModel.copyWebViewerURL()
-                                    } label: {
-                                        Label("复制", systemImage: "doc.on.doc")
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .disabled(viewModel.webViewerURL.isEmpty)
-
-                                    Button {
-                                        viewModel.openWebViewerURL()
-                                    } label: {
-                                        Label("打开", systemImage: "safari")
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .disabled(viewModel.webViewerURL.isEmpty)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("配对码")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.white.opacity(0.62))
-                            HStack(alignment: .center, spacing: 10) {
-                                Text(viewModel.webViewerPairingCode.isEmpty ? "------" : viewModel.webViewerPairingCode)
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .monospacedDigit()
-                                    .tracking(3)
-                                    .foregroundStyle(.white)
-                                Spacer()
+                            HStack(spacing: 8) {
                                 Button {
-                                    viewModel.copyWebViewerPairingCode()
+                                    viewModel.copyWebViewerURL()
                                 } label: {
-                                    Image(systemName: "doc.on.doc")
+                                    Label(s.copy, systemImage: "doc.on.doc")
                                 }
                                 .buttonStyle(.bordered)
-                                .disabled(viewModel.webViewerPairingCode.isEmpty)
-                                .help("复制配对码")
+                                .disabled(viewModel.webViewerURL.isEmpty)
 
                                 Button {
-                                    viewModel.regenerateWebViewerPairingCode()
+                                    viewModel.openWebViewerURL()
                                 } label: {
-                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                    Label(s.open, systemImage: "safari")
                                 }
                                 .buttonStyle(.bordered)
-                                .help("刷新配对码并断开当前 Viewer")
+                                .disabled(viewModel.webViewerURL.isEmpty)
                             }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                }
 
-                GlassPanel {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Label("画质", systemImage: "slider.horizontal.3")
-                            .font(.title3.bold())
-
-                        QualitySummary(config: selectedConfig)
-
-                        QualityMenu(selection: $viewModel.selectedConfigID)
-                            .disabled(viewModel.isStreaming)
-                            .opacity(viewModel.isStreaming ? 0.58 : 1)
-
-                        Button {
-                            Task<Void, Never> {
-                                await viewModel.toggleStreaming()
-                            }
-                        } label: {
-                            HStack {
-                                Image(systemName: viewModel.isStreaming ? "stop.fill" : "play.fill")
-                                Text(viewModel.isStreaming ? "停止传输" : "开始传输")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .controlSize(.large)
-                        .buttonStyle(.borderedProminent)
-                        .disabled(!viewModel.canStream)
-                        .accessibilityLabel(viewModel.isStreaming ? "停止传输" : "开始传输")
-
-                        HStack {
-                            Button("打开系统设置") {
-                                viewModel.openScreenRecordingSettings()
-                            }
-                            .buttonStyle(.link)
-
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(s.pairingCode)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.62))
+                        HStack(alignment: .center, spacing: 10) {
+                            Text(viewModel.webViewerPairingCode.isEmpty ? "------" : viewModel.webViewerPairingCode)
+                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .tracking(3)
+                                .foregroundStyle(.white)
                             Spacer()
-
-                            Button("重新检查") {
-                                Task<Void, Never> { await viewModel.refreshCaptureSources() }
+                            Button {
+                                viewModel.copyWebViewerPairingCode()
+                            } label: {
+                                Image(systemName: "doc.on.doc")
                             }
-                            .buttonStyle(.link)
-                            .disabled(viewModel.isStreaming)
+                            .buttonStyle(.bordered)
+                            .disabled(viewModel.webViewerPairingCode.isEmpty)
+                            .help(s.copyPairingCode)
 
-                            Button("刷新源") {
-                                Task<Void, Never> { await viewModel.refreshCaptureSources() }
+                            Button {
+                                viewModel.regenerateWebViewerPairingCode()
+                            } label: {
+                                Image(systemName: "arrow.triangle.2.circlepath")
                             }
-                            .buttonStyle(.link)
-                            .disabled(viewModel.isStreaming)
+                            .buttonStyle(.bordered)
+                            .help(s.refreshPairingCode)
                         }
                     }
                 }
             }
+
+            GlassPanel {
+                VStack(alignment: .leading, spacing: 16) {
+                    Label(s.quality, systemImage: "slider.horizontal.3")
+                        .font(.title3.bold())
+
+                    QualitySummary(config: selectedConfig, strings: s)
+
+                    QualityMenu(selection: $viewModel.selectedConfigID, strings: s)
+                        .disabled(viewModel.isStreaming)
+                        .opacity(viewModel.isStreaming ? 0.58 : 1)
+
+                    Button {
+                        Task<Void, Never> {
+                            await viewModel.toggleStreaming()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: viewModel.isStreaming ? "stop.fill" : "play.fill")
+                            Text(viewModel.isStreaming ? s.stopStreaming : s.startStreaming)
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .controlSize(.large)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!viewModel.canStream)
+                    .accessibilityLabel(viewModel.isStreaming ? s.stopStreaming : s.startStreaming)
+
+                    HStack {
+                        Button(s.openSystemSettings) {
+                            viewModel.openScreenRecordingSettings()
+                        }
+                        .buttonStyle(.link)
+
+                        Spacer()
+
+                        Button(s.recheck) {
+                            Task<Void, Never> { await viewModel.refreshCaptureSources() }
+                        }
+                        .buttonStyle(.link)
+                        .disabled(viewModel.isStreaming)
+
+                        Button(s.refreshSources) {
+                            Task<Void, Never> { await viewModel.refreshCaptureSources() }
+                        }
+                        .buttonStyle(.link)
+                        .disabled(viewModel.isStreaming)
+                    }
+                }
+            }
         }
-        .frame(width: 320)
+        .frame(width: BrowserDisplayLayout.controlPanelWidth)
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private var virtualDisplayPanel: some View {
         GlassPanel {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .center) {
-                    Label("扩展屏实验模式", systemImage: "display.badge.plus")
+                    Label(s.virtualDisplayMode, systemImage: "display.badge.plus")
                         .font(.title3.bold())
                     Spacer()
-                    StatusPill(text: viewModel.virtualDisplayState.title, color: virtualDisplayStateColor)
+                    StatusPill(text: s.virtualDisplayStateTitle(viewModel.virtualDisplayState), color: virtualDisplayStateColor)
                 }
 
                 if let record = viewModel.currentVirtualDisplayRecord, record.cleanupStatus != .removed {
-                    InfoRow(title: "虚拟屏", value: record.displayName)
+                    InfoRow(title: s.virtualDisplay, value: record.displayName)
                 }
 
                 if let message = viewModel.virtualDisplayErrorMessage {
@@ -287,13 +307,13 @@ struct ContentView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                Text("虚拟屏由 BetterDisplay 提供，可能受 BetterDisplay 授权或 macOS 版本影响。")
+                Text(s.virtualDisplayNote)
                     .font(.caption)
                     .foregroundStyle(.white.opacity(0.48))
                     .fixedSize(horizontal: false, vertical: true)
 
                 Toggle(isOn: cleanupOnExitBinding) {
-                    Text("退出应用时自动移除")
+                    Text(s.removeOnExit)
                         .font(.caption.weight(.semibold))
                 }
                 .toggleStyle(.switch)
@@ -318,7 +338,7 @@ struct ContentView: View {
                                 await viewModel.removeVirtualDisplay()
                             }
                         } label: {
-                            Label("移除虚拟屏", systemImage: "trash")
+                            Label(s.removeVirtualDisplay, systemImage: "trash")
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.bordered)
@@ -326,7 +346,7 @@ struct ContentView: View {
                     }
 
                     HStack(spacing: 8) {
-                        Button("检测") {
+                        Button(s.check) {
                             Task<Void, Never> { await viewModel.refreshVirtualDisplayAvailability() }
                         }
                         .buttonStyle(.link)
@@ -334,12 +354,12 @@ struct ContentView: View {
 
                         Spacer()
 
-                        Button("安装说明") {
+                        Button(s.installGuide) {
                             viewModel.openBetterDisplayInstallPage()
                         }
                         .buttonStyle(.link)
 
-                        Button("显示器设置") {
+                        Button(s.displaySettings) {
                             viewModel.openDisplaySettings()
                         }
                         .buttonStyle(.link)
@@ -352,11 +372,11 @@ struct ContentView: View {
     private var primaryVirtualDisplayButtonTitle: String {
         switch viewModel.virtualDisplayState {
         case .installedNotRunning:
-            return "启动并创建虚拟屏"
+            return s.startAndCreateVirtualDisplay
         case .creating:
-            return "正在创建"
+            return s.creating
         default:
-            return "创建虚拟屏并开始传输"
+            return s.createVirtualDisplayAndStart
         }
     }
 
@@ -380,8 +400,10 @@ struct ContentView: View {
 }
 
 private struct LockedPill: View {
+    var text: String
+
     var body: some View {
-        Label("传输中锁定", systemImage: "lock.fill")
+        Label(text, systemImage: "lock.fill")
             .font(.caption.weight(.semibold))
             .foregroundStyle(.white.opacity(0.74))
             .padding(.horizontal, 10)
@@ -395,11 +417,12 @@ private struct LockedPill: View {
 
 private struct ScopeSegmentedControl: View {
     @Binding var selection: CaptureSourceScope
+    var strings: AppStrings
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 4) {
-            Text("范围")
+            Text(strings.scope)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.62))
                 .padding(.horizontal, 8)
@@ -410,7 +433,7 @@ private struct ScopeSegmentedControl: View {
                         selection = scope
                     }
                 } label: {
-                    Text(scope.title)
+                    Text(scope.title(language: strings.language))
                         .font(.caption.weight(.semibold))
                         .frame(height: 30)
                         .padding(.horizontal, 10)
@@ -423,7 +446,7 @@ private struct ScopeSegmentedControl: View {
                         }
                 }
                 .buttonStyle(.plain)
-                .accessibilityValue(selection == scope ? "已选中" : "")
+                .accessibilityValue(selection == scope ? strings.selected : "")
             }
         }
         .padding(4)
@@ -448,6 +471,10 @@ private struct WindowChromeConfigurator: NSViewRepresentable {
             window.styleMask.insert(.fullSizeContentView)
             window.isMovableByWindowBackground = true
             window.backgroundColor = .clear
+            window.minSize = NSSize(
+                width: BrowserDisplayLayout.minimumWindowWidth,
+                height: BrowserDisplayLayout.minimumWindowHeight
+            )
         }
         return view
     }
@@ -505,6 +532,7 @@ private struct GlassPanel<Content: View>: View {
 
 private struct CountBadge: View {
     var count: Int
+    var labelPrefix: String
 
     var body: some View {
         Text("\(count)")
@@ -514,13 +542,14 @@ private struct CountBadge: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background(.white.opacity(0.12), in: Capsule())
-            .accessibilityLabel("捕获源数量 \(count)")
+            .accessibilityLabel("\(labelPrefix) \(count)")
     }
 }
 
 private struct CaptureSourceCard: View {
     var source: CaptureSource
     var isSelected: Bool
+    var strings: AppStrings
     var action: () -> Void
 
     var body: some View {
@@ -561,9 +590,9 @@ private struct CaptureSourceCard: View {
                             .font(.headline)
                             .lineLimit(1)
                         Spacer(minLength: 4)
-                        SourceKindChip(text: source.id.hasPrefix("display-") ? "整屏" : "窗口")
+                        SourceKindChip(text: source.id.hasPrefix("display-") ? strings.fullScreen : strings.window)
                     }
-                    Text(source.kind)
+                    Text(sourceKindText)
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.62))
                         .lineLimit(1)
@@ -590,7 +619,11 @@ private struct CaptureSourceCard: View {
             .shadow(color: isSelected ? .blue.opacity(0.20) : .clear, radius: 16, x: 0, y: 10)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("选择 \(source.name)")
+        .accessibilityLabel("\(strings.select) \(source.name)")
+    }
+
+    private var sourceKindText: String {
+        source.id.hasPrefix("display-") ? strings.fullScreen : source.kind
     }
 }
 
@@ -609,14 +642,15 @@ private struct SourceKindChip: View {
 
 private struct QualitySummary: View {
     var config: StreamConfig
+    var strings: AppStrings
 
     var body: some View {
         HStack(spacing: 0) {
-            MetricPill(title: "分辨率", value: "\(config.width)×\(config.height)")
+            MetricPill(title: strings.resolution, value: "\(config.width)×\(config.height)")
             Divider().overlay(.white.opacity(0.08))
-            MetricPill(title: "帧率", value: "\(config.framesPerSecond)fps")
+            MetricPill(title: strings.frameRate, value: "\(config.framesPerSecond)fps")
             Divider().overlay(.white.opacity(0.08))
-            MetricPill(title: "码率", value: "\(config.bitrate / 1_000_000)M")
+            MetricPill(title: strings.bitrate, value: "\(config.bitrate / 1_000_000)M")
         }
         .frame(height: 54)
         .background(.white.opacity(0.075), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -648,6 +682,7 @@ private struct MetricPill: View {
 
 private struct QualityMenu: View {
     @Binding var selection: String
+    var strings: AppStrings
 
     private var selectedConfig: StreamConfig {
         StreamConfig.presets.first(where: { $0.id == selection }) ?? StreamConfig.presets[0]
@@ -664,7 +699,7 @@ private struct QualityMenu: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Text("画质")
+                Text(strings.quality)
                     .foregroundStyle(.white.opacity(0.62))
                 Text(selectedTitle(for: selectedConfig))
                     .fontWeight(.semibold)
@@ -691,11 +726,11 @@ private struct QualityMenu: View {
     private func menuTitle(for preset: StreamConfig) -> String {
         let base = "\(preset.width)×\(preset.height) · \(preset.framesPerSecond)fps · \(preset.bitrate / 1_000_000)Mbps"
         if ["1440p60", "1600p60", "2160p30"].contains(preset.id) {
-            return "\(base) · 高负载"
+            return "\(base) · \(strings.highLoad)"
         }
 
         if preset.id == "1080p60" {
-            return "\(base) · 推荐"
+            return "\(base) · \(strings.recommended)"
         }
 
         return base
@@ -756,18 +791,19 @@ private struct QRCodeView: View {
 
 private struct EmptySourceView: View {
     var message: String
+    var strings: AppStrings
 
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "lock.display")
                 .font(.system(size: 42, weight: .semibold))
                 .foregroundStyle(.blue)
-            Text("暂无可捕获源")
+            Text(strings.noCaptureSources)
                 .font(.title3.bold())
             Text(message)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white.opacity(0.65))
-            Text("授权后如果仍提示，请退出并重新打开 Mac 端应用。macOS 的屏幕录制权限通常需要重启应用才会生效。")
+            Text(strings.permissionRestartHint)
                 .font(.caption)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white.opacity(0.48))

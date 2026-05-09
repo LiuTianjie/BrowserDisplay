@@ -6,8 +6,9 @@ import MirrorProtocol
 @MainActor
 final class HostViewModel: ObservableObject {
     @Published var hostName = MirrorDiscovery.displayName()
-    @Published var connectionStatus = "正在启动"
-    @Published var screenRecordingStatus = "正在检查屏幕录制权限"
+    @Published var language = AppLanguage.saved()
+    @Published var connectionStatus = AppLanguage.saved().strings.starting
+    @Published var screenRecordingStatus = AppLanguage.saved().strings.checkingScreenRecording
     @Published var permissionDiagnostics = ScreenRecordingPermission.diagnostics
     @Published var captureSources: [CaptureSource] = []
     @Published var selectedSourceID: String?
@@ -18,10 +19,10 @@ final class HostViewModel: ObservableObject {
     @Published var hasScreenRecordingAccess = false
     @Published var webViewerURL = ""
     @Published var webViewerPairingCode = ""
-    @Published var webViewerStatus = "正在启动"
+    @Published var webViewerStatus = AppLanguage.saved().strings.starting
     @Published var connectedWebViewers = 0
     @Published var virtualDisplayState: VirtualDisplayPanelState = .unavailable
-    @Published var virtualDisplayStatus = "正在检测 BetterDisplay"
+    @Published var virtualDisplayStatus = AppLanguage.saved().strings.checkingBetterDisplay
     @Published var currentVirtualDisplayRecord: VirtualDisplayRecord?
     @Published var virtualDisplayErrorMessage: String?
     @Published var shouldCleanupVirtualDisplayOnExit = false
@@ -34,6 +35,10 @@ final class HostViewModel: ObservableObject {
     private let preferences = UserDefaults.standard
     private var streamWatchdogTask: Task<Void, Never>?
     private var lastCapturedFrameAt: Date?
+
+    var strings: AppStrings {
+        language.strings
+    }
 
     var canStream: Bool {
         !captureSources.isEmpty
@@ -53,10 +58,17 @@ final class HostViewModel: ObservableObject {
         await refreshCaptureSources()
     }
 
+    func toggleLanguage() {
+        language = language.next
+        preferences.set(language.rawValue, forKey: AppLanguage.preferenceKey)
+        relocalizeStableStatuses()
+        updateStreamStateForCurrentSelection()
+    }
+
     func checkScreenRecordingAccess() {
         hasCheckedScreenRecordingAccess = true
         hasScreenRecordingAccess = ScreenRecordingPermission.hasAccess()
-        screenRecordingStatus = hasScreenRecordingAccess ? "已就绪" : "需要屏幕录制权限"
+        screenRecordingStatus = hasScreenRecordingAccess ? strings.ready : strings.needsScreenRecording
         permissionDiagnostics = ScreenRecordingPermission.diagnostics
     }
 
@@ -67,7 +79,7 @@ final class HostViewModel: ObservableObject {
 
         hasCheckedScreenRecordingAccess = true
         permissionDiagnostics = ScreenRecordingPermission.diagnostics
-        screenRecordingStatus = "正在读取可捕获屏幕和窗口"
+        screenRecordingStatus = strings.readingSources
 
         do {
             captureSources = try await captureManager.availableSources(scope: selectedSourceScope)
@@ -75,12 +87,12 @@ final class HostViewModel: ObservableObject {
             if !captureSources.contains(where: { $0.id == selectedSourceID }) {
                 selectedSourceID = captureSources.first?.id
             }
-            screenRecordingStatus = captureSources.isEmpty ? "未找到可捕获屏幕或窗口" : "已就绪"
+            screenRecordingStatus = captureSources.isEmpty ? strings.noSourcesFound : strings.ready
         } catch {
             hasScreenRecordingAccess = ScreenRecordingPermission.hasAccess()
             screenRecordingStatus = hasScreenRecordingAccess
-                ? "读取捕获源失败：\(error.localizedDescription)"
-                : "需要屏幕录制权限。请在系统设置中允许后，退出并重新打开 Mac 端应用。"
+                ? strings.readSourcesFailed(error.localizedDescription)
+                : strings.screenRecordingRestartRequired
             captureSources = []
             selectedSourceID = nil
         }
@@ -88,7 +100,7 @@ final class HostViewModel: ObservableObject {
 
     func requestScreenRecordingAccess() async {
         hasCheckedScreenRecordingAccess = true
-        screenRecordingStatus = "正在请求屏幕录制权限"
+        screenRecordingStatus = strings.requestingScreenRecording
         let granted = ScreenRecordingPermission.requestAccess()
         await refreshCaptureSources()
 
@@ -96,7 +108,7 @@ final class HostViewModel: ObservableObject {
             if !granted {
                 ScreenRecordingPermission.openSettings()
             }
-            screenRecordingStatus = "需要屏幕录制权限。请在系统设置中允许后，退出并重新打开 Mac 端应用。"
+            screenRecordingStatus = strings.screenRecordingRestartRequired
         }
     }
 
@@ -119,12 +131,12 @@ final class HostViewModel: ObservableObject {
         }
 
         let availability = await virtualDisplayProvider.availability()
-        virtualDisplayStatus = availability.message
+        virtualDisplayStatus = localizedAvailabilityMessage(availability)
         virtualDisplayErrorMessage = nil
 
         if let record = currentVirtualDisplayRecord, record.cleanupStatus != .removed {
             virtualDisplayState = record.cleanupStatus == .cleanupFailed ? .cleanupFailed : .ready
-            virtualDisplayStatus = "虚拟屏已就绪。把窗口拖到 BrowserDisplay 屏幕，或移除这块虚拟屏。"
+            virtualDisplayStatus = strings.virtualDisplayReadyMessage()
             return
         }
 
@@ -144,7 +156,7 @@ final class HostViewModel: ObservableObject {
         }
 
         virtualDisplayState = .creating
-        virtualDisplayStatus = "正在通过 BetterDisplay 创建 BrowserDisplay 虚拟屏"
+        virtualDisplayStatus = strings.creatingBrowserDisplayVirtualDisplay()
         virtualDisplayErrorMessage = nil
 
         do {
@@ -154,7 +166,7 @@ final class HostViewModel: ObservableObject {
             var record = try await virtualDisplayProvider.createDisplay(request: request)
             virtualDisplayStore.save(record)
             currentVirtualDisplayRecord = record
-            virtualDisplayStatus = "虚拟屏已创建，正在等待 macOS 枚举显示器"
+            virtualDisplayStatus = strings.waitingForVirtualDisplayEnumeration()
 
             let source = try await waitForCreatedVirtualDisplay(record: record, previousDisplayIDs: existingDisplayIDs)
             record.displayID = source.displayID
@@ -170,7 +182,7 @@ final class HostViewModel: ObservableObject {
             }
 
             virtualDisplayState = .ready
-            virtualDisplayStatus = "虚拟屏已就绪。把窗口拖到 BrowserDisplay 屏幕，正在开始传输。"
+            virtualDisplayStatus = strings.virtualDisplayReadyStartingStream()
             await startStreaming()
         } catch {
             virtualDisplayState = .createFailed
@@ -193,7 +205,7 @@ final class HostViewModel: ObservableObject {
         }
 
         virtualDisplayState = .removing
-        virtualDisplayStatus = "正在移除 BrowserDisplay 创建的虚拟屏"
+        virtualDisplayStatus = strings.removingBrowserDisplayVirtualDisplay()
         virtualDisplayErrorMessage = nil
 
         if isStreaming {
@@ -214,7 +226,7 @@ final class HostViewModel: ObservableObject {
             virtualDisplayStore.markCleanupFailed(record)
             virtualDisplayState = .cleanupFailed
             virtualDisplayErrorMessage = error.localizedDescription
-            virtualDisplayStatus = "\(error.localizedDescription) 可在 BetterDisplay 中手动删除 \(record.displayName)。"
+            virtualDisplayStatus = strings.manualBetterDisplayRemoval(record.displayName, error: error.localizedDescription)
         }
     }
 
@@ -260,7 +272,7 @@ final class HostViewModel: ObservableObject {
 
     private func startStreaming() async {
         guard let selectedSourceID else {
-            connectionStatus = "请先选择捕获源"
+            connectionStatus = strings.chooseCaptureSource
             return
         }
 
@@ -280,7 +292,7 @@ final class HostViewModel: ObservableObject {
             isStreaming = true
             lastCapturedFrameAt = Date()
             startStreamWatchdog(sourceID: selectedSourceID, scope: selectedSourceScope, config: config)
-            connectionStatus = "客户端连接后开始传输"
+            connectionStatus = strings.startsAfterClientConnects
             webViewerService.updateStreamState(
                 isStreaming: true,
                 quality: qualityLabel(for: config),
@@ -290,7 +302,7 @@ final class HostViewModel: ObservableObject {
             )
         } catch {
             isStreaming = false
-            connectionStatus = "传输失败：\(error.localizedDescription)"
+            connectionStatus = strings.streamFailed(error.localizedDescription)
             webViewerService.updateStreamState(
                 isStreaming: false,
                 quality: qualityLabel(for: config),
@@ -305,7 +317,7 @@ final class HostViewModel: ObservableObject {
         do {
             try await captureManager.stopCapture()
         } catch {
-            connectionStatus = "停止失败：\(error.localizedDescription)"
+            connectionStatus = strings.stopFailed(error.localizedDescription)
         }
 
         streamWatchdogTask?.cancel()
@@ -321,8 +333,8 @@ final class HostViewModel: ObservableObject {
             sourceName: currentStreamSourceName(),
             sourceKind: currentStreamSourceKind()
         )
-        if !connectionStatus.hasPrefix("停止失败") {
-            connectionStatus = "已就绪"
+        if !connectionStatus.hasPrefix(strings.stopFailed("")) {
+            connectionStatus = strings.ready
         }
     }
 
@@ -334,7 +346,7 @@ final class HostViewModel: ObservableObject {
                         return
                     }
                     self.connectedWebViewers = self.webViewerService.connectedViewerCount
-                    self.webViewerStatus = self.connectedWebViewers == 1 ? "1 个 Viewer 已连接" : "\(self.connectedWebViewers) 个 Viewer 已连接"
+                    self.webViewerStatus = self.strings.connectedViewerCount(self.connectedWebViewers)
                 }
             }
             webViewerService.onViewerDisconnected = { [weak self] in
@@ -343,7 +355,7 @@ final class HostViewModel: ObservableObject {
                         return
                     }
                     self.connectedWebViewers = self.webViewerService.connectedViewerCount
-                    self.webViewerStatus = self.connectedWebViewers > 0 ? "\(self.connectedWebViewers) 个 Viewer 已连接" : "等待浏览器 Viewer"
+                    self.webViewerStatus = self.connectedWebViewers > 0 ? self.strings.connectedViewerCount(self.connectedWebViewers) : self.strings.waitingBrowserViewer
                 }
             }
             webViewerService.onSignalMessage = { [weak self] envelope in
@@ -359,17 +371,17 @@ final class HostViewModel: ObservableObject {
                     }
 
                     if count > 0 {
-                        self.webViewerStatus = count == 1 ? "WebRTC 已连接" : "\(count) 个 WebRTC Viewer"
+                        self.webViewerStatus = self.strings.webRTCViewerCount(count)
                     } else if self.connectedWebViewers > 0 {
-                        self.webViewerStatus = "\(self.connectedWebViewers) 个 Viewer 已连接"
+                        self.webViewerStatus = self.strings.connectedViewerCount(self.connectedWebViewers)
                     } else {
-                        self.webViewerStatus = "等待浏览器 Viewer"
+                        self.webViewerStatus = self.strings.waitingBrowserViewer
                     }
                 }
             }
             webRTCSender.onStatusChanged = { [weak self] status in
                 Task { @MainActor in
-                    self?.webViewerStatus = status
+                    self?.webViewerStatus = self?.localizedWebRTCStatus(status) ?? status
                 }
             }
             try webViewerService.start(port: MirrorDiscovery.defaultWebViewerPort)
@@ -383,11 +395,11 @@ final class HostViewModel: ObservableObject {
             )
             webViewerURL = webViewerService.viewerURLString
             webViewerPairingCode = webViewerService.pairingCode
-            webViewerStatus = "等待浏览器 Viewer"
-            connectionStatus = "局域网可连接"
+            webViewerStatus = strings.waitingBrowserViewer
+            connectionStatus = strings.localNetworkReady
         } catch {
-            connectionStatus = "网络错误：\(error.localizedDescription)"
-            webViewerStatus = "WebViewer 启动失败"
+            connectionStatus = strings.networkError(error.localizedDescription)
+            webViewerStatus = strings.webViewerStartupFailed
         }
     }
 
@@ -395,21 +407,21 @@ final class HostViewModel: ObservableObject {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(webViewerURL, forType: .string)
-        webViewerStatus = "已复制地址"
+        webViewerStatus = strings.addressCopied
     }
 
     func copyWebViewerPairingCode() {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(webViewerPairingCode, forType: .string)
-        webViewerStatus = "已复制配对码"
+        webViewerStatus = strings.pairingCodeCopied
     }
 
     func regenerateWebViewerPairingCode() {
         webViewerService.regeneratePairingCode()
         webViewerPairingCode = webViewerService.pairingCode
         connectedWebViewers = webViewerService.connectedViewerCount
-        webViewerStatus = "配对码已刷新"
+        webViewerStatus = strings.pairingCodeRefreshed
     }
 
     func openWebViewerURL() {
@@ -453,7 +465,7 @@ final class HostViewModel: ObservableObject {
                         return
                     }
 
-                    self.connectionStatus = "画面停滞，正在恢复采集"
+                    self.connectionStatus = self.strings.restoringCapture
                     Task {
                         await self.restartCapture(sourceID: sourceID, scope: scope, config: config)
                     }
@@ -479,9 +491,9 @@ final class HostViewModel: ObservableObject {
                 self.webRTCSender.push(sampleBuffer)
             }
             lastCapturedFrameAt = Date()
-            connectionStatus = "采集已恢复"
+            connectionStatus = strings.captureRestored
         } catch {
-            connectionStatus = "恢复采集失败：\(error.localizedDescription)"
+            connectionStatus = strings.recoverCaptureFailed(error.localizedDescription)
         }
     }
 
@@ -493,7 +505,7 @@ final class HostViewModel: ObservableObject {
         if let record = virtualDisplayStore.activeBrowserDisplayRecords().sorted(by: { $0.createdAt > $1.createdAt }).first {
             currentVirtualDisplayRecord = record
             virtualDisplayState = record.cleanupStatus == .cleanupFailed ? .cleanupFailed : .ready
-            virtualDisplayStatus = "检测到上次遗留的 \(record.displayName)，可点击移除虚拟屏清理。"
+            virtualDisplayStatus = strings.leftoverVirtualDisplay(record.displayName)
         }
     }
 
@@ -534,7 +546,7 @@ final class HostViewModel: ObservableObject {
            let selectedSourceID,
            let selectedSource = captureSources.first(where: { $0.id == selectedSourceID }),
            selectedSource.displayID == record.displayID || selectedSource.name == record.displayName {
-            return "BrowserDisplay 虚拟屏"
+            return strings.browserDisplayVirtualDisplay
         }
 
         if let selectedSourceID,
@@ -542,11 +554,11 @@ final class HostViewModel: ObservableObject {
             return selectedSource.name
         }
 
-        return "未选择"
+        return strings.noneSelected
     }
 
     private func currentStreamSourceKind() -> String {
-        if currentStreamSourceName() == "BrowserDisplay 虚拟屏" {
+        if currentStreamSourceName() == strings.browserDisplayVirtualDisplay {
             return "virtual-display"
         }
 
@@ -559,6 +571,85 @@ final class HostViewModel: ObservableObject {
         }
 
         return "capture"
+    }
+
+    private func relocalizeStableStatuses() {
+        if hasCheckedScreenRecordingAccess {
+            if hasScreenRecordingAccess {
+                screenRecordingStatus = captureSources.isEmpty ? strings.noSourcesFound : strings.ready
+            } else {
+                screenRecordingStatus = strings.screenRecordingRestartRequired
+            }
+        } else {
+            screenRecordingStatus = strings.checkingScreenRecording
+        }
+
+        if isStreaming {
+            connectionStatus = strings.startsAfterClientConnects
+        } else if !webViewerURL.isEmpty {
+            connectionStatus = strings.localNetworkReady
+        } else {
+            connectionStatus = strings.starting
+        }
+
+        if connectedWebViewers > 0 {
+            webViewerStatus = strings.connectedViewerCount(connectedWebViewers)
+        } else {
+            webViewerStatus = webViewerURL.isEmpty ? strings.starting : strings.waitingBrowserViewer
+        }
+
+        if let record = currentVirtualDisplayRecord, record.cleanupStatus != .removed {
+            virtualDisplayStatus = strings.virtualDisplayReadyMessage()
+        } else {
+            switch virtualDisplayState {
+            case .unavailable:
+                virtualDisplayStatus = strings.betterDisplayUnavailable
+            case .installedNotRunning:
+                virtualDisplayStatus = strings.betterDisplayInstalledNotRunning
+            case .readyToCreate, .ready:
+                virtualDisplayStatus = strings.betterDisplayReady
+            case .creating:
+                virtualDisplayStatus = strings.creatingBrowserDisplayVirtualDisplay()
+            case .removing:
+                virtualDisplayStatus = strings.removingBrowserDisplayVirtualDisplay()
+            case .createFailed, .cleanupFailed:
+                break
+            }
+        }
+    }
+
+    private func localizedAvailabilityMessage(_ availability: VirtualDisplayAvailability) -> String {
+        switch availability.status {
+        case .unavailable:
+            return strings.betterDisplayUnavailable
+        case .installedNotRunning:
+            return strings.betterDisplayInstalledNotRunning
+        case .ready:
+            return strings.betterDisplayReady
+        }
+    }
+
+    private func localizedWebRTCStatus(_ status: String) -> String {
+        switch status {
+        case "收到 WebRTC offer":
+            return strings.text("Received WebRTC offer", "收到 WebRTC offer")
+        case "设置 remote SDP 失败":
+            return strings.text("Failed to set remote SDP", "设置 remote SDP 失败")
+        case "生成 WebRTC answer 失败":
+            return strings.text("Failed to create WebRTC answer", "生成 WebRTC answer 失败")
+        case "设置 local SDP 失败":
+            return strings.text("Failed to set local SDP", "设置 local SDP 失败")
+        case "已发送 WebRTC answer":
+            return strings.text("Sent WebRTC answer", "已发送 WebRTC answer")
+        case "添加 ICE candidate 失败":
+            return strings.text("Failed to add ICE candidate", "添加 ICE candidate 失败")
+        default:
+            if status.hasPrefix("WebRTC 已推送首帧 ") {
+                let suffix = status.replacingOccurrences(of: "WebRTC 已推送首帧 ", with: "")
+                return strings.text("WebRTC pushed first frame \(suffix)", status)
+            }
+            return status
+        }
     }
 
     private func updateStreamStateForCurrentSelection() {

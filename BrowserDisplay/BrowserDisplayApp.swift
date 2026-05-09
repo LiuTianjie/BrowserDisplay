@@ -8,7 +8,10 @@ struct BrowserDisplayApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(viewModel: viewModel)
-                .frame(minWidth: 980, minHeight: 900)
+                .frame(
+                    minWidth: BrowserDisplayLayout.minimumWindowWidth,
+                    minHeight: BrowserDisplayLayout.minimumWindowHeight
+                )
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
                     viewModel.cleanupVirtualDisplayOnExit()
                 }

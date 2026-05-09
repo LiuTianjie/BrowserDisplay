@@ -1,248 +1,242 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BrowserDisplay | 把浏览器变成 Mac 显示器</title>
-  <meta name="description" content="BrowserDisplay 是一套面向 macOS 与浏览器设备的局域网显示方案。Mac 端捕获屏幕、窗口或虚拟屏，通过 WebRTC 推送到同网段浏览器。" />
+  <title data-i18n="meta.title">BrowserDisplay | Local browser display for Mac</title>
+  <meta name="description" data-i18n-content="meta.description"
+    content="BrowserDisplay turns a browser device on your local network into a temporary display for your Mac, with screen, window, and virtual display capture over WebRTC." />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 
 <body>
   <header class="site-header" data-header>
-    <a class="brand" href="#top" aria-label="BrowserDisplay 首页">
+    <a class="brand" href="#top" aria-label="BrowserDisplay home" data-i18n-aria="nav.homeAria">
       <span class="brand-mark" aria-hidden="true">B</span>
-      <span>
+      <span class="brand-copy">
         <strong>BrowserDisplay</strong>
-        <small>Browser viewer</small>
+        <small>Local browser display</small>
       </span>
     </a>
 
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
-      <span></span>
-      <span></span>
-    </button>
+    <div class="header-actions">
+      <nav id="site-nav" class="site-nav" data-nav>
+        <a href="#advantages" data-i18n="nav.advantages">Advantages</a>
+        <a href="#how-it-works" data-i18n="nav.how">How it works</a>
+        <a href="#usage" data-i18n="nav.usage">Usage</a>
+        <a href="#virtual-display" data-i18n="nav.virtual">Virtual display</a>
+      </nav>
 
-    <nav id="site-nav" class="site-nav" data-nav>
-      <a href="#advantages">优势</a>
-      <a href="#how-it-works">原理</a>
-      <a href="#usage">使用方法</a>
-      <a href="#virtual-display">虚拟屏</a>
-    </nav>
+      <a class="github-link" href="https://github.com/LiuTianjie/BrowserDisplay" target="_blank" rel="noreferrer"
+        aria-label="View BrowserDisplay on GitHub" data-i18n-aria="nav.githubAria">
+        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor"
+            d="M12 2C6.48 2 2 6.58 2 12.26c0 4.52 2.87 8.36 6.84 9.72.5.1.68-.22.68-.5 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.38-3.37-1.38-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.93.85.09-.67.35-1.12.63-1.38-2.22-.26-4.55-1.14-4.55-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.3.1-2.72 0 0 .84-.27 2.75 1.05A9.35 9.35 0 0 1 12 6.92c.85 0 1.7.12 2.5.34 1.9-1.32 2.74-1.05 2.74-1.05.55 1.42.2 2.46.1 2.72.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.08.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .28.18.6.69.5A10.08 10.08 0 0 0 22 12.26C22 6.58 17.52 2 12 2Z" />
+        </svg>
+        <span>GitHub</span>
+      </a>
+
+      <button class="language-toggle" type="button" data-lang-toggle aria-label="Switch language"
+        data-i18n-aria="nav.languageAria">
+        <span data-lang-current>EN</span>
+        <span class="language-divider" aria-hidden="true">/</span>
+        <span data-lang-next>中文</span>
+      </button>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
   </header>
 
   <main id="top">
-    <section class="hero section-panel">
+    <section class="hero">
       <div class="hero-copy">
-        <h1>把浏览器变成 Mac 显示器</h1>
-        <p class="hero-lede">
-          在 Mac 端选择屏幕、窗口或 BrowserDisplay 虚拟屏，通过 WebRTC 推送到同一局域网里的浏览器。手机、平板、另一台电脑，都能成为一块临时副屏。
+        <h1 data-i18n="hero.title">Turn a browser into a Mac display</h1>
+        <p class="hero-lede" data-i18n="hero.lede">
+          Select a screen, window, or dedicated virtual display on your Mac. BrowserDisplay streams it over WebRTC to a
+          browser on the same local network.
         </p>
-        <div class="hero-actions" aria-label="主要操作">
-          <a class="button primary" href="#usage">开始使用</a>
-          <a class="button secondary" href="#advantages">了解优势</a>
+        <div class="hero-actions" aria-label="Primary actions" data-i18n-aria="hero.actionsAria">
+          <a class="button primary" href="#usage" data-i18n="hero.primaryCta">Get started</a>
+          <a class="button secondary" href="#how-it-works" data-i18n="hero.secondaryCta">See how it works</a>
         </div>
       </div>
 
-      <figure class="hero-visual">
-        <img src="./assets/app-window.png?v=browserdisplay" width="3048" height="2384"
-          alt="BrowserDisplay 应用界面截图，包含捕获源、扩展屏实验模式、WebViewer 和画质面板" />
-        <figcaption>BrowserDisplay 集中管理捕获源、WebViewer 连接、虚拟屏和画质预设。</figcaption>
+      <aside class="code-window" aria-label="BrowserDisplay status example" data-i18n-aria="hero.statusAria">
+        <div class="window-bar">
+          <span></span>
+          <span></span>
+          <span></span>
+          <strong>browserdisplay.local</strong>
+        </div>
+        <pre><code><span class="code-muted">$</span> start BrowserDisplay
+source      BrowserDisplay-1024
+viewer      http://browser.local:48112/viewer
+transport   WebRTC
+quality     1080p · 60fps · 18Mbps
+status      ready</code></pre>
+      </aside>
+
+      <dl class="stat-strip" aria-label="Core capabilities" data-i18n-aria="stats.aria">
+        <div>
+          <dt>Receiver</dt>
+          <dd>Browser</dd>
+        </div>
+        <div>
+          <dt>Transport</dt>
+          <dd>WebRTC</dd>
+        </div>
+        <div>
+          <dt data-i18n="stats.sourceLabel">Source</dt>
+          <dd>Screen / Window / Virtual</dd>
+        </div>
+      </dl>
+
+      <figure class="product-shot">
+        <img src="./assets/app-window.png?v=browserdisplay" width="1920" height="1515"
+          alt="BrowserDisplay app screenshot showing capture sources, WebViewer, virtual display, and quality settings"
+          data-i18n-alt="hero.screenshotAlt" />
+        <figcaption data-i18n="hero.caption">Capture sources, browser connections, virtual displays, and quality presets
+          live in one Mac app.</figcaption>
       </figure>
     </section>
 
-    <section class="quickstart" aria-label="快速开始">
-      <div class="quickstart-copy">
+    <section class="quickstart" aria-label="Quick start" data-i18n-aria="quick.aria">
+      <article class="quickstart-lead">
         <p class="eyebrow">Quick start</p>
-        <h2>三步连接</h2>
-      </div>
-      <ol class="step-strip">
+        <h2 data-i18n="quick.title">Connect in three steps</h2>
+      </article>
+      <ol class="step-grid">
         <li>
-          <strong>选来源</strong>
-          <span>屏幕、窗口，或独立虚拟屏。</span>
+          <span>01</span>
+          <strong data-i18n="quick.step1Title">Choose a source</strong>
+          <p data-i18n="quick.step1Body">Select a screen, window, or create a BrowserDisplay virtual display.</p>
         </li>
         <li>
-          <strong>浏览器打开</strong>
-          <span>扫码或输入 WebViewer 地址。</span>
+          <span>02</span>
+          <strong data-i18n="quick.step2Title">Open a browser</strong>
+          <p data-i18n="quick.step2Body">Scan the QR code or enter the WebViewer URL, then pair on the receiver.</p>
         </li>
         <li>
-          <strong>开始传输</strong>
-          <span>按网络状况选择画质。</span>
+          <span>03</span>
+          <strong data-i18n="quick.step3Title">Start streaming</strong>
+          <p data-i18n="quick.step3Body">Pick a quality preset for the network and start the stream.</p>
         </li>
       </ol>
     </section>
 
-    <section id="advantages" class="doc-section">
+    <section id="advantages" class="section-block">
       <div class="section-heading">
         <p class="eyebrow">Why BrowserDisplay</p>
-        <h2>核心优势</h2>
-        <p>用 BrowserDisplay 处理捕获、连接、画质和虚拟屏，浏览器只负责接收画面。</p>
+        <h2 data-i18n="advantages.title">Built for temporary side displays and clean demos</h2>
       </div>
 
       <div class="feature-grid">
-        <article class="feature-card">
-          <span class="feature-index">01</span>
-          <h3>设备随手接入</h3>
-          <p>手机、平板、电脑浏览器都能接收。</p>
+        <article class="feature-card feature-card-blue">
+          <span>Browser first</span>
+          <h3 data-i18n="advantages.card1Title">No receiver app</h3>
+          <p data-i18n="advantages.card1Body">A phone, tablet, or another computer can receive the stream as long as its
+            browser supports WebRTC.</p>
         </article>
         <article class="feature-card">
-          <span class="feature-index">02</span>
-          <h3>专用工作区</h3>
-          <p>虚拟屏只展示你拖进去的窗口。</p>
+          <span>Clean workspace</span>
+          <h3 data-i18n="advantages.card2Title">Show only what matters</h3>
+          <p data-i18n="advantages.card2Body">Virtual display mode isolates the demo surface while your main screen
+            stays private.</p>
         </article>
         <article class="feature-card">
-          <span class="feature-index">03</span>
-          <h3>接收端免安装</h3>
-          <p>浏览器打开 WebViewer 即可连接。</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-index">04</span>
-          <h3>低延迟链路</h3>
-          <p>ScreenCaptureKit 捕获，WebRTC 传输。</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-index">05</span>
-          <h3>画质可控</h3>
-          <p>从稳定到高清，按网络一键切换。</p>
-        </article>
-        <article class="feature-card">
-          <span class="feature-index">06</span>
-          <h3>状态可见</h3>
-          <p>端口、连接数、配对码和画质在一处显示。</p>
+          <span>One control surface</span>
+          <h3 data-i18n="advantages.card3Title">One control surface</h3>
+          <p data-i18n="advantages.card3Body">Sources, ports, QR code, viewer count, pairing code, and quality presets
+            are managed in one place.</p>
         </article>
       </div>
     </section>
 
-    <section id="how-it-works" class="doc-section split-section">
-      <div class="section-heading sticky-heading">
+    <section id="how-it-works" class="section-block architecture">
+      <div class="section-heading">
         <p class="eyebrow">Architecture</p>
-        <h2>它如何工作</h2>
-        <p>链路只在本地网络内建立，Mac 负责采集和发送，浏览器负责接收。</p>
+        <h2 data-i18n="architecture.title">A local display link</h2>
+        <p data-i18n="architecture.body">BrowserDisplay does not require a native receiver app. The Mac handles capture,
+          encoding, and signaling; the browser receives and renders.</p>
       </div>
 
-      <div class="architecture-list">
-        <article class="arch-item">
-          <span>Mac app</span>
-          <h3>选择来源</h3>
-          <p>屏幕、窗口、虚拟屏统一管理。</p>
-        </article>
-        <article class="arch-item">
-          <span>Capture + Encoder</span>
-          <h3>捕获并编码</h3>
-          <p>按当前画质预设输出视频流。</p>
-        </article>
-        <article class="arch-item">
-          <span>WebViewer</span>
-          <h3>浏览器接收</h3>
-          <p>扫码或输入地址，按配对码建立连接。</p>
-        </article>
-        <article class="arch-item">
-          <span>Virtual Display</span>
-          <h3>专用扩展屏</h3>
-          <p>通过 BetterDisplay 创建独立画面目标。</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="usage" class="doc-section">
-      <div class="section-heading">
-        <p class="eyebrow">Guide</p>
-        <h2>使用方法</h2>
-        <p>先跑通普通捕获，再按需要创建独立虚拟屏。</p>
-      </div>
-
-      <div class="usage-grid">
-        <article class="use-card">
+      <div class="flow-grid">
+        <article>
           <span>01</span>
-          <h3>授权</h3>
-          <p>允许 macOS 屏幕录制。</p>
+          <h3>Capture</h3>
+          <p data-i18n="architecture.step1">ScreenCaptureKit captures screens or windows; BetterDisplay provides the
+            optional virtual display.</p>
         </article>
-        <article class="use-card">
+        <article>
           <span>02</span>
-          <h3>选源</h3>
-          <p>选择屏幕、窗口或虚拟屏。</p>
+          <h3>Signal</h3>
+          <p data-i18n="architecture.step2">WebViewer opens from a local HTTP page and uses a pairing code to establish
+            the session.</p>
         </article>
-        <article class="use-card">
+        <article>
           <span>03</span>
-          <h3>打开</h3>
-          <p>浏览器打开 WebViewer 地址。</p>
+          <h3>Stream</h3>
+          <p data-i18n="architecture.step3">Video streams to the browser over WebRTC, with quality controlled by
+            presets.</p>
         </article>
-        <article class="use-card">
-          <span>04</span>
-          <h3>推流</h3>
-          <p>点击开始传输。</p>
-        </article>
-      </div>
-
-      <div class="quality-pills" aria-label="画质预设">
-        <span>720p30 · 稳定</span>
-        <span>1080p60 · 推荐</span>
-        <span>1440p60 · 高清</span>
-        <span>2160p30 · 细节</span>
-      </div>
-
-      <div class="faq-row">
-        <details>
-          <summary>连接失败</summary>
-          <p>确认 Mac 与接收设备在同一局域网，并使用 BrowserDisplay 显示的 WebViewer 地址。</p>
-        </details>
-        <details>
-          <summary>找不到捕获源</summary>
-          <p>重新授予屏幕录制权限后，退出并重新打开 BrowserDisplay。</p>
-        </details>
-        <details>
-          <summary>画面卡顿</summary>
-          <p>切到 1080p30 或 720p30，优先使用 5GHz / 6GHz Wi-Fi。</p>
-        </details>
       </div>
     </section>
 
-    <section id="virtual-display" class="doc-section dark-band">
+    <section id="usage" class="section-block usage">
       <div class="section-heading">
-        <p class="eyebrow">Experimental mode</p>
-        <h2>虚拟扩展屏实验模式</h2>
-        <p>不必捕获主屏。创建一块专用显示器，再发送到浏览器。</p>
+        <p class="eyebrow">Usage</p>
+        <h2 data-i18n="usage.title">Run and grant permission</h2>
       </div>
 
-      <div class="virtual-grid">
-        <article>
-          <h3>什么时候使用</h3>
-          <p>演示备注、直播控屏、调试面板、会议共享。</p>
+      <div class="usage-layout">
+        <article class="command-card">
+          <div class="command-head">
+            <p class="eyebrow">Run locally</p>
+            <h3 data-i18n="usage.runTitle">Build and launch</h3>
+            <button class="copy-button" type="button" data-copy-target="run-command"
+              data-i18n="copy.label">Copy</button>
+          </div>
+          <pre><code id="run-command">./tools/run-browserdisplay.command</code></pre>
         </article>
-        <article>
-          <h3>外部依赖</h3>
-          <p>由 BetterDisplay 提供虚拟显示能力。</p>
-        </article>
-        <article>
-          <h3>安全边界</h3>
-          <p>只清理 BrowserDisplay 自己创建的屏幕。</p>
+
+        <article class="command-card">
+          <div class="command-head">
+            <p class="eyebrow">Permission</p>
+            <h3 data-i18n="usage.permissionTitle">Reset Screen Recording permission</h3>
+            <button class="copy-button" type="button" data-copy-target="permission-command"
+              data-i18n="copy.label">Copy</button>
+          </div>
+          <pre><code id="permission-command">./tools/reset-screen-recording.command</code></pre>
         </article>
       </div>
 
-      <div class="command-card">
-        <div>
-          <p class="eyebrow">BetterDisplay CLI 示例</p>
-          <h3>创建一块 16:9 HiDPI 虚拟屏</h3>
-        </div>
-        <button class="copy-button" type="button" data-copy-target="betterdisplay-command">复制</button>
-        <pre><code id="betterdisplay-command">/Applications/BetterDisplay.app/Contents/MacOS/BetterDisplay create \
-  -type=VirtualScreen \
-  -virtualScreenName=BrowserDisplay-AB12 \
-  -aspectWidth=16 \
-  -aspectHeight=9 \
-  -virtualScreenHiDPI=on \
-  -resolutionList=1920x1080,2560x1440</code></pre>
+      <div class="quality-row" aria-label="Quality presets" data-i18n-aria="usage.qualityAria">
+        <span>720p30</span>
+        <span>1080p60</span>
+        <span>1440p60</span>
+        <span>2160p30</span>
       </div>
+    </section>
+
+    <section id="virtual-display" class="section-block virtual-band">
+      <div>
+        <p class="eyebrow">Virtual display</p>
+        <h2 data-i18n="virtual.title">Put demo content on its own display</h2>
+        <p data-i18n="virtual.body">With BetterDisplay installed, BrowserDisplay can create a dedicated virtual display.
+          Move windows onto it, then stream that display to the browser.</p>
+      </div>
+      <a class="button inverse" href="#usage" data-i18n="virtual.cta">Start setup</a>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div>
-      <strong>BrowserDisplay</strong>
-      <p>为本地演示、调试和临时副屏准备的一条轻量链路。</p>
-    </div>
-    <a href="#usage">开始使用</a>
+    <strong>BrowserDisplay</strong>
+    <span>Local browser display for macOS.</span>
+    <a href="#top" data-i18n="footer.top">Back to top</a>
   </footer>
 
   <script src="./script.js"></script>

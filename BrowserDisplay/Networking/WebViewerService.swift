@@ -673,7 +673,7 @@ private struct ServerMessage<T: Encodable>: Encodable {
 private enum WebViewerAssets {
     static let html = """
     <!doctype html>
-    <html lang="zh-CN">
+    <html lang="en">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -691,32 +691,33 @@ private enum WebViewerAssets {
                 <span></span>
               </div>
               <div>
-                <p class="pairing-kicker">Secure Viewer</p>
-                <h1>输入配对码</h1>
+                <p class="pairing-kicker" data-i18n="secureViewer">Secure Viewer</p>
+                <h1 data-i18n="enterPairingCode">Enter pairing code</h1>
               </div>
             </div>
-            <p class="pairing-note">在 Mac 端 WebViewer 面板查看 6 位数字。</p>
-            <label class="sr-only" for="pairingCode">输入 Mac 端配对码</label>
+            <p class="pairing-note" data-i18n="pairingNote">Find the 6-digit code in the WebViewer panel on your Mac.</p>
+            <label class="sr-only" for="pairingCode" data-i18n="pairingLabel">Enter the Mac pairing code</label>
             <div class="pairing-row">
               <input id="pairingCode" name="pairingCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="one-time-code">
-              <button id="pairingSubmit" type="submit">配对</button>
+              <button id="pairingSubmit" type="submit" data-i18n="pair">Pair</button>
             </div>
             <p id="pairingError"></p>
           </form>
-          <button class="play" id="play" type="button" aria-label="开始观看">
+          <button class="play" id="play" type="button" aria-label="Start watching">
             <span></span>
           </button>
-          <p id="status">输入配对码后连接</p>
+          <p id="status">Enter the pairing code to connect</p>
         </div>
         <header class="toolbar" id="toolbar">
           <span id="badge">WebViewer</span>
-          <span id="source">当前来源：未选择</span>
+          <span id="source">Source: None selected</span>
           <strong id="quality">--</strong>
-          <button id="fullscreen" type="button" aria-label="全屏观看" title="全屏观看">
+          <button id="languageToggle" type="button" aria-label="Switch language">中文</button>
+          <button id="fullscreen" type="button" aria-label="Enter fullscreen" title="Enter fullscreen">
             <span></span>
           </button>
         </header>
-        <div class="rotate-hint" id="rotateHint">横屏观看</div>
+        <div class="rotate-hint" id="rotateHint">Rotate for landscape viewing</div>
       </main>
       <script src="/viewer.js?v=12"></script>
     </body>
@@ -1096,6 +1097,19 @@ private enum WebViewerAssets {
       color: rgba(255,255,255,0.70);
     }
 
+    #languageToggle {
+      height: 32px;
+      min-width: 46px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.86);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
     #fullscreen {
       width: 32px;
       height: 32px;
@@ -1170,6 +1184,8 @@ private enum WebViewerAssets {
       const source = document.getElementById("source");
       const toolbar = document.getElementById("toolbar");
       const fullscreen = document.getElementById("fullscreen");
+      const languageToggle = document.getElementById("languageToggle");
+      const rotateHint = document.getElementById("rotateHint");
       const pairingForm = document.getElementById("pairingForm");
       const pairingCodeInput = document.getElementById("pairingCode");
       const pairingError = document.getElementById("pairingError");
@@ -1189,20 +1205,159 @@ private enum WebViewerAssets {
       let signalTimeoutMs = 4500;
       let disconnectGraceMs = 8000;
       let firstFrameTimeoutMs = 18000;
+      let currentLanguage = { value: "en" };
+      let currentStatusRenderer = { value: () => "" };
+      let currentPairingErrorRenderer = { value: () => "" };
+      let latestSource = { name: "", kind: "capture" };
       let reconnectTimer = { value: null };
       let signalTimer = { value: null };
       let disconnectTimer = { value: null };
       let firstFrameTimer = { value: null };
       let lastRenderedFrameAt = { value: Date.now() };
       const pairingStorageKey = `BrowserDisplay.pairingCode.${location.host}`;
+      const languageStorageKey = "BrowserDisplay.viewerLanguage";
 
-      const setStatus = (text, state = "idle") => {
-        status.textContent = text;
+      const messages = {
+        en: {
+          secureViewer: "Secure Viewer",
+          enterPairingCode: "Enter pairing code",
+          pairingNote: "Find the 6-digit code in the WebViewer panel on your Mac.",
+          pairingLabel: "Enter the Mac pairing code",
+          pair: "Pair",
+          startWatching: "Start watching",
+          enterPairingCodeToConnect: "Enter the pairing code to connect",
+          sourcePrefix: "Source",
+          noneSelected: "None selected",
+          enterFullscreen: "Enter fullscreen",
+          exitFullscreen: "Exit fullscreen",
+          rotateHint: "Rotate for landscape viewing",
+          languageButton: "中文",
+          switchLanguage: "Switch language to Chinese",
+          firstFrameTimeout: "First frame timed out",
+          reconnecting: "Reconnecting",
+          reconnectingSuffix: ", reconnecting",
+          syncingQuality: "Syncing quality",
+          createConnectionFailed: "Failed to create connection",
+          safariWebRTCUnavailable: "WebRTC is unavailable in this browser",
+          signalingTimeout: "Signaling timed out",
+          signalingConnectedSyncingQuality: "Signaling connected, syncing quality",
+          pairingFailed: "Pairing failed. Check the 6-digit code shown on the Mac.",
+          disconnected: "Disconnected",
+          connectionFailed: "Connection failed",
+          receivedVideoTrack: "Received video track, waiting for video",
+          playbackBlocked: "Playback was blocked: {error}",
+          connectedWaitingFrames: "Connected, waiting for video frames",
+          connectionInterrupted: "Connection interrupted",
+          offerSent: "Offer sent, waiting for Mac answer",
+          pairingCodeRefreshedReconnect: "Pairing code refreshed. Pair again.",
+          macPairingCodeRefreshed: "The Mac refreshed the pairing code",
+          paused: "Paused",
+          answerReceived: "Answer received, connecting",
+          connecting: "Connecting",
+          enterSixDigitCode: "Enter a 6-digit pairing code",
+          rememberedPairingConnecting: "Pairing remembered, connecting",
+          browserDisplayVirtualDisplay: "BrowserDisplay Virtual Display"
+        },
+        zh: {
+          secureViewer: "Secure Viewer",
+          enterPairingCode: "输入配对码",
+          pairingNote: "在 Mac 端 WebViewer 面板查看 6 位数字。",
+          pairingLabel: "输入 Mac 端配对码",
+          pair: "配对",
+          startWatching: "开始观看",
+          enterPairingCodeToConnect: "输入配对码后连接",
+          sourcePrefix: "当前来源",
+          noneSelected: "未选择",
+          enterFullscreen: "全屏观看",
+          exitFullscreen: "退出全屏",
+          rotateHint: "横屏观看",
+          languageButton: "EN",
+          switchLanguage: "切换语言为英文",
+          firstFrameTimeout: "等待首帧超时",
+          reconnecting: "重连中",
+          reconnectingSuffix: "，重连中",
+          syncingQuality: "正在同步画质",
+          createConnectionFailed: "创建连接失败",
+          safariWebRTCUnavailable: "Safari 当前不可用 WebRTC",
+          signalingTimeout: "信令超时",
+          signalingConnectedSyncingQuality: "信令已连接，正在同步画质",
+          pairingFailed: "配对失败，请检查 Mac 端显示的 6 位配对码",
+          disconnected: "已断开",
+          connectionFailed: "连接失败",
+          receivedVideoTrack: "收到视频轨道，等待画面",
+          playbackBlocked: "播放被拦截：{error}",
+          connectedWaitingFrames: "已连接，等待视频帧",
+          connectionInterrupted: "连接中断",
+          offerSent: "已发送 offer，等待 Mac answer",
+          pairingCodeRefreshedReconnect: "配对码已刷新，请重新配对",
+          macPairingCodeRefreshed: "Mac 端已刷新配对码",
+          paused: "已暂停",
+          answerReceived: "收到 answer，连接中",
+          connecting: "连接中",
+          enterSixDigitCode: "请输入 6 位配对码",
+          rememberedPairingConnecting: "已记住配对，正在连接",
+          browserDisplayVirtualDisplay: "BrowserDisplay 虚拟屏"
+        }
+      };
+
+      const template = (value, params = {}) => Object.entries(params).reduce(
+        (result, [key, replacement]) => result.replaceAll(`{${key}}`, replacement),
+        value
+      );
+
+      const t = (key, params = {}) => template((messages[currentLanguage.value] || messages.en)[key] || messages.en[key] || key, params);
+
+      const localized = (key, params = {}) => () => t(key, params);
+
+      const detectLanguage = () => {
+        try {
+          const saved = localStorage.getItem(languageStorageKey);
+          if (saved === "en" || saved === "zh") return saved;
+        } catch {}
+        return (navigator.languages || [navigator.language || "en"]).some((language) => String(language).toLowerCase().startsWith("zh")) ? "zh" : "en";
+      };
+
+      const normalizeSourceName = (name, kind) => {
+        if (kind === "virtual-display") return t("browserDisplayVirtualDisplay");
+        if (!name || name === "未选择" || name === "None selected") return t("noneSelected");
+        return name;
+      };
+
+      const updateSource = () => {
+        source.textContent = `${t("sourcePrefix")}: ${normalizeSourceName(latestSource.name, latestSource.kind)}`;
+      };
+
+      const setFullscreenModeLabels = (mode) => {
+        fullscreen.setAttribute("aria-label", mode === "inline" ? t("enterFullscreen") : t("exitFullscreen"));
+        fullscreen.title = mode === "inline" ? t("enterFullscreen") : t("exitFullscreen");
+      };
+
+      const applyLanguage = () => {
+        document.documentElement.lang = currentLanguage.value === "zh" ? "zh-CN" : "en";
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          node.textContent = t(node.dataset.i18n);
+        });
+        play.setAttribute("aria-label", t("startWatching"));
+        languageToggle.textContent = t("languageButton");
+        languageToggle.setAttribute("aria-label", t("switchLanguage"));
+        rotateHint.textContent = t("rotateHint");
+        setFullscreenModeLabels(stage.dataset.fullscreen || "inline");
+        updateSource();
+        status.textContent = currentStatusRenderer.value();
+        pairingError.textContent = currentPairingErrorRenderer.value();
+      };
+
+      const render = (message) => typeof message === "function" ? message() : message;
+
+      const setStatus = (message, state = "idle") => {
+        currentStatusRenderer.value = typeof message === "function" ? message : () => message;
+        status.textContent = currentStatusRenderer.value();
         stage.dataset.state = state;
       };
 
-      const setPairingError = (text) => {
-        pairingError.textContent = text;
+      const setPairingError = (message) => {
+        currentPairingErrorRenderer.value = typeof message === "function" ? message : () => message;
+        pairingError.textContent = currentPairingErrorRenderer.value();
       };
 
       const normalizePairingCode = (value) => (value || "").replace(/\\D/g, "").slice(0, 6);
@@ -1236,7 +1391,7 @@ private enum WebViewerAssets {
           }
           pairingCode = "";
           pairingCodeInput.value = "";
-          setStatus("输入配对码后连接");
+          setStatus(localized("enterPairingCodeToConnect"));
           setTimeout(() => pairingCodeInput.focus(), 60);
         }
       };
@@ -1322,7 +1477,7 @@ private enum WebViewerAssets {
           if (peer !== candidatePeer || firstFrameSeen) return;
           resetPeer();
           exitFullscreen();
-          scheduleReconnect("等待首帧超时");
+          scheduleReconnect(localized("firstFrameTimeout"));
         }, firstFrameTimeoutMs);
       };
 
@@ -1333,7 +1488,7 @@ private enum WebViewerAssets {
           return;
         }
         clearReconnectTimer();
-        setStatus(reason ? `${reason}，重连中` : "重连中");
+        setStatus(reason ? () => `${render(reason)}${t("reconnectingSuffix")}` : localized("reconnecting"));
         reconnectTimer.value = setTimeout(() => {
           reconnectTimer.value = null;
           if (socket && socket.readyState === WebSocket.OPEN) {
@@ -1358,8 +1513,7 @@ private enum WebViewerAssets {
 
       const setFullscreenMode = (mode) => {
         stage.dataset.fullscreen = mode;
-        fullscreen.setAttribute("aria-label", mode === "inline" ? "全屏观看" : "退出全屏");
-        fullscreen.title = mode === "inline" ? "全屏观看" : "退出全屏";
+        setFullscreenModeLabels(mode);
       };
 
       const updateOrientation = () => {
@@ -1390,7 +1544,7 @@ private enum WebViewerAssets {
       const ensurePeer = async () => {
         if (!started || peer || offerInFlight) return;
         if (!streamStateReady.value) {
-          setStatus("正在同步画质");
+          setStatus(localized("syncingQuality"));
           return;
         }
         if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -1403,8 +1557,8 @@ private enum WebViewerAssets {
           await createOffer();
         } catch (error) {
           resetPeer();
-          setStatus(`创建连接失败：${error.name || "Error"}`);
-          scheduleReconnect("创建连接失败");
+          setStatus(() => `${t("createConnectionFailed")}: ${error.name || "Error"}`);
+          scheduleReconnect(localized("createConnectionFailed"));
         } finally {
           offerInFlight = false;
         }
@@ -1412,7 +1566,7 @@ private enum WebViewerAssets {
 
       const connect = () => {
         if (!window.RTCPeerConnection) {
-          setStatus("Safari 当前不可用 WebRTC");
+          setStatus(localized("safariWebRTCUnavailable"));
           return;
         }
         if (!pairingCode) {
@@ -1434,7 +1588,7 @@ private enum WebViewerAssets {
         signalTimer.value = setTimeout(() => {
           if (socket && socket.readyState !== WebSocket.OPEN) {
             closeSocket();
-            scheduleReconnect("信令超时");
+            scheduleReconnect(localized("signalingTimeout"));
           }
         }, signalTimeoutMs);
         socket.onopen = async () => {
@@ -1444,7 +1598,7 @@ private enum WebViewerAssets {
           stage.dataset.paired = "true";
           savePairingCode();
           streamStateReady.value = false;
-          setStatus("信令已连接，正在同步画质");
+          setStatus(localized("signalingConnectedSyncingQuality"));
         };
         socket.onmessage = (event) => handleMessage(event.data);
         socket.onclose = async (event) => {
@@ -1453,12 +1607,12 @@ private enum WebViewerAssets {
           if (!opened) {
             started = false;
             clearStoredPairingCode();
-            setPairingError("配对失败，请检查 Mac 端显示的 6 位配对码");
+            setPairingError(localized("pairingFailed"));
             setPaired(false);
             return;
           }
-          await resetPlayback("已断开");
-          const reason = event.code ? `已断开 WS ${event.code}` : "已断开";
+          await resetPlayback(localized("disconnected"));
+          const reason = event.code ? () => `${t("disconnected")} WS ${event.code}` : localized("disconnected");
           scheduleReconnect(reason);
         };
         socket.onerror = () => {
@@ -1466,14 +1620,14 @@ private enum WebViewerAssets {
           if (!opened) {
             started = false;
             clearStoredPairingCode();
-            setPairingError("配对失败，请检查 Mac 端显示的 6 位配对码");
+            setPairingError(localized("pairingFailed"));
             setPaired(false);
             closeSocket();
             return;
           }
           closeSocket();
-          resetPlayback("连接失败");
-          scheduleReconnect("连接失败");
+          resetPlayback(localized("connectionFailed"));
+          scheduleReconnect(localized("connectionFailed"));
         };
       };
 
@@ -1486,8 +1640,8 @@ private enum WebViewerAssets {
         nextPeer.ontrack = (event) => {
           const stream = event.streams[0] || new MediaStream([event.track]);
           video.srcObject = stream;
-          setStatus("收到视频轨道，等待画面");
-          video.play().catch((error) => setStatus(`播放被拦截：${error.name || "Error"}`));
+          setStatus(localized("receivedVideoTrack"));
+          video.play().catch((error) => setStatus(() => t("playbackBlocked", { error: error.name || "Error" })));
           startFirstFrameTimer(nextPeer);
           waitForFirstFrame();
           scheduleToolbarHide();
@@ -1500,20 +1654,20 @@ private enum WebViewerAssets {
           if (peer !== nextPeer) return;
           if (nextPeer.connectionState === "connected") {
             clearDisconnectTimer();
-            if (!firstFrameSeen) setStatus("已连接，等待视频帧");
+            if (!firstFrameSeen) setStatus(localized("connectedWaitingFrames"));
           } else if (nextPeer.connectionState === "disconnected") {
             clearDisconnectTimer();
             disconnectTimer.value = setTimeout(() => {
               if (peer !== nextPeer || nextPeer.connectionState !== "disconnected") return;
               resetPeer();
               exitFullscreen();
-              scheduleReconnect("连接中断");
+              scheduleReconnect(localized("connectionInterrupted"));
             }, disconnectGraceMs);
           } else if (nextPeer.connectionState === "failed" || nextPeer.connectionState === "closed") {
             clearDisconnectTimer();
             resetPeer();
             exitFullscreen();
-            scheduleReconnect("连接中断");
+            scheduleReconnect(localized("connectionInterrupted"));
           }
           scheduleToolbarHide();
         };
@@ -1527,7 +1681,7 @@ private enum WebViewerAssets {
         await nextPeer.setLocalDescription(offer);
         if (peer !== nextPeer) return;
         send({ type: "webrtc-offer", sdp: nextPeer.localDescription });
-        setStatus("已发送 offer，等待 Mac answer");
+        setStatus(localized("offerSent"));
         startFirstFrameTimer(nextPeer);
       };
 
@@ -1542,8 +1696,8 @@ private enum WebViewerAssets {
         if (message.type === "pairing-reset") {
           closeSocket();
           clearStoredPairingCode();
-          await resetPlayback("配对码已刷新，请重新配对", false);
-          setPairingError("Mac 端已刷新配对码");
+          await resetPlayback(localized("pairingCodeRefreshedReconnect"), false);
+          setPairingError(localized("macPairingCodeRefreshed"));
           return;
         }
 
@@ -1554,9 +1708,11 @@ private enum WebViewerAssets {
           currentQuality.value = body.quality || currentQuality.value;
           currentCodec.value = body.codec || currentCodec.value;
           quality.textContent = body.quality || "--";
-          source.textContent = `当前来源：${body.sourceName || "未选择"}`;
+          latestSource.name = body.sourceName || "";
+          latestSource.kind = body.sourceKind || "capture";
+          updateSource();
           if (!streamActive) {
-            await resetPlayback("已暂停");
+            await resetPlayback(localized("paused"));
           } else if (started && !peer) {
             await ensurePeer();
           }
@@ -1569,7 +1725,7 @@ private enum WebViewerAssets {
 
         if (message.type === "webrtc-answer") {
           await peer.setRemoteDescription(message.sdp);
-          setStatus("收到 answer，连接中");
+          setStatus(localized("answerReceived"));
         } else if (message.type === "ice-candidate" && message.candidate) {
           await peer.addIceCandidate(message.candidate).catch(() => {});
         }
@@ -1611,7 +1767,7 @@ private enum WebViewerAssets {
       const beginConnection = async () => {
         started = true;
         stage.dataset.paired = "true";
-        setStatus("连接中");
+        setStatus(localized("connecting"));
         try {
           const playAttempt = video.play();
           if (playAttempt && playAttempt.catch) playAttempt.catch(() => {});
@@ -1628,7 +1784,7 @@ private enum WebViewerAssets {
         event.preventDefault();
         pairingCode = normalizePairingCode(pairingCodeInput.value);
         if (pairingCode.length !== 6) {
-          setPairingError("请输入 6 位配对码");
+          setPairingError(localized("enterSixDigitCode"));
           return;
         }
         setPairingError("");
@@ -1670,12 +1826,25 @@ private enum WebViewerAssets {
       video.addEventListener("webkitbeginfullscreen", () => setFullscreenMode("native"));
       video.addEventListener("webkitendfullscreen", () => setFullscreenMode("inline"));
 
+      languageToggle.addEventListener("click", () => {
+        currentLanguage.value = currentLanguage.value === "zh" ? "en" : "zh";
+        try {
+          localStorage.setItem(languageStorageKey, currentLanguage.value);
+        } catch {}
+        applyLanguage();
+      });
+
+      currentLanguage.value = detectLanguage();
+      setStatus(localized("enterPairingCodeToConnect"));
+      updateSource();
+      applyLanguage();
+
       const storedPairingCode = loadStoredPairingCode();
       if (storedPairingCode.length === 6) {
         pairingCode = storedPairingCode;
         pairingCodeInput.value = storedPairingCode;
         setPaired(true, { forget: false });
-        setStatus("已记住配对，正在连接");
+        setStatus(localized("rememberedPairingConnecting"));
         beginConnection();
       } else {
         setPaired(false);

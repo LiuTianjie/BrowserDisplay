@@ -24,12 +24,13 @@ enum CaptureSourceScope: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
+    func title(language: AppLanguage) -> String {
+        let strings = language.strings
         switch self {
         case .currentDesktop:
-            return "当前桌面"
+            return strings.currentDesktop
         case .allDesktops:
-            return "全部桌面"
+            return strings.allDesktops
         }
     }
 }
